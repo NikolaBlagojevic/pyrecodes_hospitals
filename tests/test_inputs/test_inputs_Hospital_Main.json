@@ -1,0 +1,11 @@
+{
+    "ComponentLibrary": {
+        "ComponentLibraryCreatorClass": "JSONComponentLibraryCreator",
+        "ComponentLibraryFile": "test_inputs_Hospital_ComponentLibrary.json"
+    },
+    "System": {
+        "SystemCreatorClass": "JSONSystemCreator",
+        "SystemClass": "HospitalSystem",
+        "SystemConfigurationFile": "test_inputs_Hospital_SystemConfiguration.json"
+    }
+}

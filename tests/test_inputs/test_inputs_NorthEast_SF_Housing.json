@@ -1,0 +1,126 @@
+{   
+    "Content": {        
+        "Locality 1": {
+            "Coordinates": {"BoundingBox": {"Latitude": [37.78, 37.82], "Longitude": [-122.43, -122.38]}},                        
+            "ComponentsInLocality": {
+                "RecoveryResourceSuppliers": ["EmergencyResponseCenter"],
+                "BuildingsInfoFolder": "./Example 3/R2D Output/",
+                "BuildingIDsRange": [8000, 9000],
+                "MaxNumBuildings": 10,
+                "AreaPerPerson": 541        
+            }  
+        }            
+    },
+    "DamageInput": {
+        "Type": "R2DDamageInput",
+        "Parameters": {"ScenarioID": 1}
+    },    
+    "Resources": {
+        "Housing": {
+            "Group": "Utilities",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "HousingDistributionPriority",
+                                                            "Parameters": {}},
+                                    "TransferService": ""}
+                                  }
+                                },      
+        "FirstResponderEngineer": {  
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                  }
+                                },
+        "SeniorEngineer": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "Contractor": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "Money": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "PlanCheckEngineeringTeam": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "SitePreparationCrew": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "CleanUpCrew": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "EngineeringDesignTeam": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "DemolitionCrew": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                },
+        "RepairCrew": {     
+            "Group": "RecoveryResources",
+            "DistributionModel": {"Type": "UtilityDistributionModel",
+                                  "Parameters": {
+                                    "DistributionPriority": {"Type": "RandomPriority",
+                                                            "Parameters": {"Seed": 42.0, "DemandType": ["RecoveryDemand"]}},
+                                    "TransferService": ""}
+                                    }
+                                }
+    },
+    "ResilienceCalculator": [{
+        "Type": "ReCoDeSResilienceCalculator",
+        "Parameters": ["Housing", "FirstResponderEngineer", "RepairCrew"]        
+    },
+        {"Type": "NISTGoalsResilienceCalculator",
+        "Parameters": [{"Resource": "Housing", "DesiredFunctionalityLevel": 0.95}]
+    }]
+}
