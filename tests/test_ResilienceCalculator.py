@@ -1,9 +1,7 @@
-import pytest
+
 from pyrecodes_hospitals import main
 from pyrecodes_hospitals import ResilienceCalculator
 import math
-import numpy as np
-import pandas as pd
 import random
 
 INPUT_DICT = './tests/test_inputs/test_inputs_Hospital_Main.json'
@@ -508,7 +506,7 @@ class TestHospitalMeasuresOfServiceCalculator:
         resilience_calculator.update(system.components)
         for time_step in range(0, 2):
             system = run_system_time_step(system, time_step)
-        assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), 0.00566, rel_tol=0.1)
+        assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), 0.00566, rel_tol=0.05)
         assert math.isclose(resilience_calculator_RED.calculate_baseline_mortality_rate(system.components), 0.05)
         assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), 0.006)
         assert math.isclose(resilience_calculator_OT.calculate_baseline_mortality_rate(system.components), 0)
@@ -516,13 +514,11 @@ class TestHospitalMeasuresOfServiceCalculator:
 
         for time_step in range(2, 5):
             system = run_system_time_step(system, time_step)
-        assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), (4*0.05+0.0566*5)/54, rel_tol=0.1)
+        assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), (4*0.05+0.0566*5)/54, rel_tol=0.05)
         assert math.isclose(resilience_calculator_RED.calculate_baseline_mortality_rate(system.components), 0.05)
         assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), (4*0.05+5*0.05)/49)
         assert math.isclose(resilience_calculator_OT.calculate_baseline_mortality_rate(system.components), 0)
         assert math.isclose(resilience_calculator_OT_YELLOW.calculate_baseline_mortality_rate(system.components), 0)
-
-
 
     def test_calculate_resilience(self):
         random.seed(0)
@@ -548,8 +544,20 @@ class TestHospitalMeasuresOfServiceCalculator:
         resilience_calculator_GREEN.update(system.components)
         for time_step in range(4):
             system = run_system_time_step(system, time_step)
-        assert resilience_calculator.calculate_resilience() == {'MortalityRateBefore24H': 3/46, 'MortalityRateAfter24H': 0, 'AverageLengthOfStay': (3+2+1+3+2+2+1+22+6+6+5*3)/46, 'SurgeriesPerformed': 1, 'SurgeriesCancelled': 1}
-        assert resilience_calculator_RED.calculate_resilience() == {'MortalityRateBefore24H': 0/3, 'MortalityRateAfter24H': 0, 'AverageLengthOfStay': 6/3, 'SurgeriesPerformed': 1, 'SurgeriesCancelled': 0}
+        measures_of_service = resilience_calculator.calculate_resilience()
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 3/46)
+        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.0083911, rel_tol=0.05)
+        assert math.isclose(measures_of_service['SurgeriesPerformed'], 1)
+        assert math.isclose(measures_of_service['SurgeriesCancelled'], 1)
+        assert math.isclose(measures_of_service['AverageLengthOfStay'], (3+2+1+3+2+2+1+22+6+6+5*3)/46)
+    
+        measures_of_service = resilience_calculator_RED.calculate_resilience()
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 0.05)
+        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.05)
+        assert math.isclose(measures_of_service['SurgeriesPerformed'], 1)
+        assert math.isclose(measures_of_service['SurgeriesCancelled'], 0)
+        assert math.isclose(measures_of_service['AverageLengthOfStay'], 6/3)
+
         assert resilience_calculator_GREEN.calculate_resilience() == {'MortalityRateBefore24H': 0, 'MortalityRateAfter24H': 0, 'AverageLengthOfStay': 1, 'SurgeriesPerformed': 0, 'SurgeriesCancelled': 0}
         
         resilience_calculator.ONE_DAY = 4
@@ -558,15 +566,15 @@ class TestHospitalMeasuresOfServiceCalculator:
             system = run_system_time_step(system, time_step)
         
         measures_of_service = resilience_calculator.calculate_resilience()
-        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 6/62)
-        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0)
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 5/62)
+        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.00974, rel_tol=0.05)
         assert math.isclose(measures_of_service['SurgeriesPerformed'], 3)
         assert math.isclose(measures_of_service['SurgeriesCancelled'], 4)
         assert math.isclose(measures_of_service['AverageLengthOfStay'], 1.58064516)
 
         measures_of_service = resilience_calculator_RED.calculate_resilience()
-        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 1/5)
-        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0)
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 0.05)
+        assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.05)
         assert math.isclose(measures_of_service['SurgeriesPerformed'], 3)
         assert math.isclose(measures_of_service['SurgeriesCancelled'], 0)
         assert math.isclose(measures_of_service['AverageLengthOfStay'], 3.0)

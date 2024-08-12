@@ -14,17 +14,18 @@ class TestSystem():
 
     @pytest.fixture()
     def component_library_creator(self) -> ComponentLibraryCreator.ComponentLibraryCreator:
-        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.component_library_file)
+        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.COMPONENT_LIBRARY_FILE)
 
     @pytest.fixture()
     def system(self, system_creator: SystemCreator.SystemCreator, component_library_creator: ComponentLibraryCreator.ComponentLibraryCreator) -> System.System:
         component_library = component_library_creator.form_library()       
-        system = System.BuiltEnvironmentSystem(self.system_configuration_file, component_library, system_creator)
+        system = System.BuiltEnvironmentSystem(self.SYSTEM_CONFIGURATION_FILE, component_library, system_creator)
         return system
 
 class TestDistributionListCreator(TestSystem):
-    component_library_file = "./Example 1/ThreeLocalitiesCommunity_ComponentLibrary.json"
-    system_configuration_file = './Example 1/ThreeLocalitiesCommunity.json'
+
+    COMPONENT_LIBRARY_FILE = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
+    SYSTEM_CONFIGURATION_FILE = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'
 
     @pytest.fixture
     def distribution_list_creator(self, system: System.System):
@@ -53,8 +54,8 @@ class TestDistributionListCreator(TestSystem):
         assert distribution_list_creator.get_resource_distribution_list() == target_list
 
 class TestThreeLocalitiesSystem(TestSystem):
-    component_library_file = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
-    system_configuration_file = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'    
+    COMPONENT_LIBRARY_FILE = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
+    SYSTEM_CONFIGURATION_FILE = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'    
     
     def test_initial_system_state(self, system: System.System):
         # //TODO: Implement. Check initial components' state, system supply, demand and consumption.
@@ -66,6 +67,7 @@ class TestThreeLocalitiesSystem(TestSystem):
 
     def test_distribute_resources(self, system: System.System):
         system.distribute_resources()
+        system.time_step = 0
         bool_list = []
         target_consumptions = [4, 1, 3]
         demand_col = system.resources['ElectricPower']['DistributionModel'].system_matrix.DEMAND_COL_ID
@@ -88,7 +90,7 @@ class TestThreeLocalitiesSystem(TestSystem):
         assert all(bool_list)
 
     def test_set_configuration_file(self, system: System.System):
-        assert system.configuration_file == self.system_configuration_file
+        assert system.configuration_file == self.SYSTEM_CONFIGURATION_FILE
 
     def test_set_component_library(self, system: System.System, component_library_creator: dict):
         # //TODO: eq method implemented. Consider changing __init__ method for components
@@ -106,6 +108,7 @@ class TestThreeLocalitiesSystem(TestSystem):
 
     def test_update(self, system: System.System):
         bool_list = []
+        system.time_step = 0
         for component in system.components:
             bool_list.append(component.functionality_level == 1)
 

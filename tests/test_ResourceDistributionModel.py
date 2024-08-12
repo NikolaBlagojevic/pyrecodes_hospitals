@@ -14,8 +14,9 @@ def set_bsu_communication_resource_name(components):
             component.COMMUNICATION_RESOURCE_NAME = 'Communication'
 
 class TestSingleResourceSystemMatrixCreator():
-    component_library_file = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
-    system_configuration_file = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'
+
+    COMPONENT_LIBRARY_FILE = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
+    SYSTEM_CONFIGURATION_FILE = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'
 
     @pytest.fixture
     def system_creator(self):
@@ -23,18 +24,18 @@ class TestSingleResourceSystemMatrixCreator():
 
     @pytest.fixture
     def component_library(self):
-        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.component_library_file).form_library()
+        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.COMPONENT_LIBRARY_FILE).form_library()
 
     @pytest.fixture
     def system(self, system_creator, component_library):
-        system = System.BuiltEnvironmentSystem(self.system_configuration_file, component_library, system_creator)
+        system = System.BuiltEnvironmentSystem(self.SYSTEM_CONFIGURATION_FILE, component_library, system_creator)
         system.time_step = 0
         # set_bsu_communication_resource_name(system.components)
         return system
 
     @pytest.fixture
     def distribution_models(self, system_creator, component_library):
-        system_creator.setup(component_library, self.system_configuration_file)
+        system_creator.setup(component_library, self.SYSTEM_CONFIGURATION_FILE)
         components = system_creator.create_components()
         # set_bsu_communication_resource_name(components)
         resources = system_creator.get_resource_parameters(components)
@@ -220,8 +221,9 @@ class TestSingleResourceSystemMatrixCreator():
 
 
 class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
-    component_library_file = "./Example 1/ThreeLocalitiesCommunity_ComponentLibrary.json"
-    system_configuration_file = './Example 1/ThreeLocalitiesCommunity.json'
+
+    COMPONENT_LIBRARY_FILE = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"
+    SYSTEM_CONFIGURATION_FILE = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'
 
     @pytest.fixture
     def system_creator(self):
@@ -229,17 +231,18 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
 
     @pytest.fixture
     def component_library(self):
-        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.component_library_file).form_library()
+        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.COMPONENT_LIBRARY_FILE).form_library()
 
     @pytest.fixture
     def system(self, system_creator, component_library):
-        system = System.BuiltEnvironmentSystem(self.system_configuration_file, component_library, system_creator)
+        system = System.BuiltEnvironmentSystem(self.SYSTEM_CONFIGURATION_FILE, component_library, system_creator)
         set_bsu_communication_resource_name(system.components)
+        system.time_step = 0
         return system
 
     @pytest.fixture
     def distribution_models(self, system_creator, component_library):
-        system_creator.setup(component_library, self.system_configuration_file)
+        system_creator.setup(component_library, self.SYSTEM_CONFIGURATION_FILE)
         components = system_creator.create_components()
         set_bsu_communication_resource_name(components)
         resources = system_creator.get_resource_parameters(components)
@@ -335,21 +338,26 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         power_plant_row_id = 1
         base_station_row_id = 0
         percent_of_met_demand = 0.4
-        reduced_supply_of_the_power_plant = [0.0, 0.0, 0.0]
-        reduced_supply_of_the_base_station = [0.0, 0.0, 0.0]
-        bool_list = []
+        reduced_supply_of_the_power_plant = [5.0, 0.0, 0.0]
+        reduced_supply_of_the_base_station = [0.0, 1.0, 1.0]
         for power_plant_supply, base_station_supply, distribution_model in zip(reduced_supply_of_the_power_plant,
                                                                                reduced_supply_of_the_base_station,
                                                                                distribution_models.values()):
+            distribution_model.components[power_plant_row_id].supply['Supply']['ElectricPower'].set_current_amount(5.0)
+            distribution_model.components[base_station_row_id].supply['Supply']['Communication'].set_current_amount(1.0)
             distribution_model.reduce_component_supply(power_plant_row_id, percent_of_met_demand)
             distribution_model.reduce_component_supply(base_station_row_id, percent_of_met_demand)
-            bool_list.append(math.isclose(distribution_model.system_matrix.get_current_resource_amount(
-                distribution_model.components[power_plant_row_id], Component.SupplyOrDemand.SUPPLY.value, 'Supply'),
-                power_plant_supply))
-            bool_list.append(math.isclose(distribution_model.system_matrix.get_current_resource_amount(
-                distribution_model.components[base_station_row_id], Component.SupplyOrDemand.SUPPLY.value, 'Supply'),
-                base_station_supply))
-        assert all(bool_list)
+            assert math.isclose(
+                distribution_model.components[power_plant_row_id].get_current_resource_amount('supply', 
+                                                                                              'Supply',
+                                                                                              'ElectricPower'),
+                power_plant_supply)
+            assert math.isclose(
+                distribution_model.components[base_station_row_id].get_current_resource_amount('supply', 
+                                                                                              'Supply',
+                                                                                              'Communication'),
+                base_station_supply)
+
 
     def test_get_demand(self, distribution_models: dict):
         bool_list = []
@@ -373,7 +381,7 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         bool_list = []
         for target_supply, distribution_model in zip(target_supplies, distribution_models.values()):
             distribution_model.fill_system_matrix()
-            current_supply = distribution_model.get_system_supply()
+            current_supply = distribution_model.get_total_supply(scope=['All'])
             bool_list.append(math.isclose(target_supply, current_supply))
 
         assert all(bool_list)
@@ -386,7 +394,7 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         for target_supply, distribution_model in zip(target_supplies, distribution_models.values()):
             distribution_model.components = system.components
             distribution_model.fill_system_matrix()
-            current_supply = distribution_model.get_system_supply()
+            current_supply = distribution_model.get_total_supply(scope=['All'])
             bool_list.append(math.isclose(target_supply, current_supply))
 
         assert all(bool_list)
@@ -396,7 +404,7 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         bool_list = []
         for target_demand, distribution_model in zip(target_demands, distribution_models.values()):
             distribution_model.fill_system_matrix()
-            current_demand = distribution_model.get_system_demand()
+            current_demand = distribution_model.get_total_demand(scope=['All'])
             bool_list.append(math.isclose(target_demand, current_demand))
 
         assert all(bool_list)
@@ -410,7 +418,7 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         for target_demand, distribution_model in zip(target_demands, distribution_models.values()):
             distribution_model.components = system.components
             distribution_model.fill_system_matrix()
-            current_demand = distribution_model.get_system_demand()
+            current_demand = distribution_model.get_total_demand(scope=['All'])
             bool_list.append(math.isclose(target_demand, current_demand))
 
         assert all(bool_list)
@@ -420,7 +428,7 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         bool_list = []
         for target_consumption, distribution_model in zip(target_consumptions, distribution_models.values()):
             distribution_model.fill_system_matrix()
-            current_consumption = distribution_model.get_system_consumption()
+            current_consumption = distribution_model.get_total_consumption(scope=['All'])
             bool_list.append(math.isclose(target_consumption, current_consumption))
 
         assert all(bool_list)
@@ -434,170 +442,212 @@ class TestUtilityDistributionModel_ThreeLocalitiesCommunity():
         for target_demand, distribution_model in zip(target_demands, distribution_models.values()):
             distribution_model.components = system.components
             distribution_model.distribute()
-            current_consumption = distribution_model.get_system_consumption()
+            current_consumption = distribution_model.get_total_consumption(scope=['All'])
             bool_list.append(math.isclose(target_demand, current_consumption))
 
         assert all(bool_list)
 
+class TestHospitalDistributionModel():
 
-class TestUtilityDistributionModel_NorthEast_SF():
-    component_library_file = "./tests/test_inputs/test_inputs_NorthEast_SF_Housing_ComponentLibrary.json"
-    system_configuration_file = "./tests/test_inputs/test_inputs_NorthEast_SF_Housing_SystemConfiguration.json"
-    recovery_resource_supply = {"FirstResponderEngineer": 5,
-                                "SeniorEngineer": 4,
-                                "Contractor": 10,
-                                "Money": 5500000000,
-                                "PlanCheckEngineeringTeam": 10,
-                                "SitePreparationCrew": 10,
-                                "CleanUpCrew": 10,
-                                "EngineeringDesignTeam": 10,
-                                "DemolitionCrew": 10,
-                                "RepairCrew": 500}
-   
-    @pytest.fixture
-    def system_creator(self):
-        return SystemCreator.R2DSystemCreator()
+    MAIN_FILE = './tests/test_inputs/test_inputs_Hospital_Main.json'
+    EXCEL_INPUT_1 = './tests/test_inputs/test_inputs_Hospital_ExcelInput1.xlsx'
+    EXCEL_INPUT_2 = './tests/test_inputs/test_inputs_Hospital_ExcelInput2.xlsx'
+    EXCEL_INPUT_3 = './tests/test_inputs/test_inputs_Hospital_ExcelInput3.xlsx'
+    ADDITIONAL_DATA_LOCATION = './tests/test_inputs/'
+    MCI_SCENARIO_PARAMETERS = {}
 
-    @pytest.fixture
-    def component_library(self):
-        return ComponentLibraryCreator.JSONComponentLibraryCreator(self.component_library_file).form_library()
-
-    @pytest.fixture
-    def system(self, system_creator, component_library):
-        system = System.BuiltEnvironmentSystem(self.system_configuration_file, component_library, system_creator)
-        return system
-
-    @pytest.fixture
-    def distribution_models(self, system_creator, component_library):
-        system_creator.setup(component_library, self.system_configuration_file)
-        components = system_creator.create_components()
-        set_bsu_communication_resource_name(components)
-        self.set_recovery_resource_supply(components)   
-        resources = system_creator.get_resource_parameters(components)        
-        distribution_models = {resource_name: resource_parameters['DistributionModel'] for resource_name, resource_parameters in resources.items()}
-        return distribution_models
-
-    def set_recovery_resource_supply(self, components: list([Component.Component])):
-        emergency_response_center = components[0]
-        for resource_name, resource_amount in self.recovery_resource_supply.items():
-            emergency_response_center.supply['Supply'][resource_name].initial_amount = resource_amount
-            emergency_response_center.supply['Supply'][resource_name].current_amount = resource_amount
-
-    def test_housing_distribution_no_damage(self, distribution_models: dict):
-        distribution_models['Housing'].distribute()
-        bool_list = []
-        target_total_supply = 0
-        for component in distribution_models['Housing'].components[1:]:
-            bool_list.append(
-                component.supply['Supply']['Housing'].current_amount == component.demand['OperationDemand'][
-                    'Housing'].current_amount)
-            target_total_supply += component.supply['Supply']['Housing'].current_amount
-        bool_list.append(target_total_supply == distribution_models['Housing'].get_system_consumption())
-        bool_list.append(target_total_supply == distribution_models['Housing'].get_system_supply())
-        assert all(bool_list)
-
-    def test_housing_distribution_with_damage(self, system: System.System, distribution_models: dict):
-        system.set_initial_damage()
-        system.update()
-        distribution_models['Housing'].components = system.components
-        distribution_models['Housing'].distribute()
-        bool_list = []
-        target_total_supply = 0
-        target_total_demand = 0
-        for component in distribution_models['Housing'].components[1:]:      
-            if component.name in ['DS0_ResidentialBuilding', 'DS1_ResidentialBuilding']:
-                bool_list.append(component.supply['Supply']['Housing'].current_amount == component.demand['OperationDemand']['Housing'].current_amount)                
-                target_total_supply += component.supply['Supply']['Housing'].current_amount
-            else:
-                bool_list.append(math.isclose(component.supply['Supply']['Housing'].current_amount, 0))
-            bool_list.append(component.supply['Supply']['Housing'].initial_amount == component.demand['OperationDemand']['Housing'].current_amount)
-            target_total_demand += component.demand['OperationDemand']['Housing'].current_amount
-
-        bool_list.append(math.isclose(target_total_supply, distribution_models['Housing'].get_system_consumption()))
-        bool_list.append(math.isclose(target_total_supply, distribution_models['Housing'].get_system_supply()))
-        bool_list.append(target_total_demand == distribution_models['Housing'].get_system_demand())
-        assert all(bool_list)
-
-    def test_recovery_resource_distribution_no_damage(self, distribution_models: dict):
-        bool_list = []
-        for resource_name, distribution_model in distribution_models.items():
-            if not (resource_name == 'Housing'):
-                distribution_model.distribute()
-                bool_list.append(distribution_model.get_system_consumption() == 0)
-                bool_list.append(distribution_model.get_system_demand() == 0)
-                bool_list.append(distribution_model.get_system_supply() == self.recovery_resource_supply[resource_name])
-
-        for component in distribution_models['Housing'].components:
-            for recovery_activity in component.recovery_model.recovery_activities.values():
-                bool_list.append(recovery_activity.demand_met == 1.0)
-
-        assert all(bool_list)
-
-    def test_rapid_inspection_distribution_with_damage(self, system: System.System, distribution_models: dict):
-        system.set_initial_damage()
-        system.update()  
-
-        bool_list = []               
-        self.set_recovery_resource_supply(system.components)
-        distribution_models['FirstResponderEngineer'].components = system.components
-        distribution_models['FirstResponderEngineer'].distribute()
-        bool_list.append(math.isclose(distribution_models['FirstResponderEngineer'].get_system_consumption(), 8*0.1))
-        bool_list.append(math.isclose(distribution_models['FirstResponderEngineer'].get_system_demand(), 8*0.1))
-        bool_list.append(distribution_models['FirstResponderEngineer'].get_system_supply() == self.recovery_resource_supply['FirstResponderEngineer'])
-        
-        for component in distribution_models['FirstResponderEngineer'].components:
-            for recovery_activity in component.recovery_model.recovery_activities.values():
-                bool_list.append(recovery_activity.demand_met == 1.0)
-  
-        assert all(bool_list)
-
-    def test_detailed_inspection_distribution_with_damage(self, system: System.System, distribution_models: dict):
-        system.set_initial_damage()
-        system.update()
-        self.set_recovery_resource_supply(system.components)
-        system.recover()   
-        system.update()        
-        bool_list = []                       
-        demand_per_component = 2
-        components_with_demand_id = [component_id for component_id, component in enumerate(system.components) if 'SeniorEngineer' in component.demand['RecoveryDemand']]         
-        distribution_models['SeniorEngineer'].components = system.components
-        distribution_models['SeniorEngineer'].distribute()
-        component_priorities, demand_type = distribution_models['SeniorEngineer'].get_component_priorities()              
-        bool_list.append(math.isclose(distribution_models['SeniorEngineer'].get_system_consumption(), min(self.recovery_resource_supply['SeniorEngineer'], len(components_with_demand_id)*demand_per_component)))
-        bool_list.append(math.isclose(distribution_models['SeniorEngineer'].get_system_demand(), len(components_with_demand_id)*demand_per_component))
-        bool_list.append(distribution_models['SeniorEngineer'].get_system_supply() == self.recovery_resource_supply['SeniorEngineer'])
-        num_components_with_met_demand = math.floor(self.recovery_resource_supply['SeniorEngineer'] / demand_per_component)
-        counter = 0
-        for component_offset_id in component_priorities[1:]:  
-            component_id = component_offset_id - distribution_models['SeniorEngineer'].system_matrix.RECOVERY_DEMAND_ROW_OFFSET
-            component = system.components[component_id]                        
-            if component.name in ['DS2_ResidentialBuilding', 'DS3_ResidentialBuilding', 'DS4_ResidentialBuilding'] and component_id in components_with_demand_id:
-                if counter < num_components_with_met_demand:
-                    bool_list.append(component.recovery_model.recovery_activities['DetailedInspection'].demand_met == 1.0)
-                    counter += 1
-                else:
-                    bool_list.append(component.recovery_model.recovery_activities['DetailedInspection'].demand_met == 0.0)             
-        assert all(bool_list)
-
-    def test_set_unmet_demand_for_recovery_activities(self, distribution_models: dict):
-        pass
-
-class TestTimeStepsOfAutonomyDistributionModel():
-    
-    FILENAME = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_Main.json'
-
-    @pytest.fixture
-    def system(self):
-        input_dict = main.read_file(self.FILENAME)
+    def initiate_system(self, excel_input_file_name: str):
+        excel_input_data = main.read_excel_input(excel_input_file_name)
+        input_dict = main.read_main_file(self.MAIN_FILE, self.ADDITIONAL_DATA_LOCATION)
+        main.format_input_from_excel(excel_input_data, self.MCI_SCENARIO_PARAMETERS, input_dict, self.ADDITIONAL_DATA_LOCATION, 
+                                    default_patient_library_file='test_inputs_Hospital_PatientLibrary.json',
+                                    default_stress_scenario_file='test_inputs_Hospital_StressScenario.json')
         system = main.create_system(input_dict)
         return system
 
-    @pytest.fixture
-    def distribution_models(self, system_creator, component_library):
-        system_creator.setup(component_library, self.system_configuration_file)
-        components = system_creator.create_components()
-        set_bsu_communication_resource_name(components)
-        self.set_recovery_resource_supply(components)
-        resources = system_creator.get_resource_parameters(components)
-        distribution_models = {resource_name: resource_parameters['DistributionModel'] for resource_name, resource_parameters in resources.items()}
-        return distribution_models
+class TestUtilityDistributionModel_Hospital(TestHospitalDistributionModel):
+    
+    def test_nurse_distribution(self):
+        system = self.initiate_system(self.EXCEL_INPUT_1)
+        distribution_model = system.resources['Nurse']['DistributionModel']
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 0
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 0
+        system.set_initial_damage()
+        system.time_step = 1
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Nurse'] == 0
+        system.update_patients()
+        assert system.components[1].patients[0].unmet_demand_info['Nurse'] == [1]
+
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 6
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 6
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
+        system.update_patients()
+        assert system.components[1].patients[0].unmet_demand_info['Nurse'] == [1]
+
+        system.time_step = 2
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 6
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 6
+        system.receive_patients() 
+        system.update()   
+        distribution_model.distribute() 
+        assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
+        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5)
+        system.update_patients()
+        assert system.components[2].patients[0].unmet_demand_info['Nurse'] == [1, 2]
+
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 8
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 8
+        distribution_model.distribute() 
+        assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
+        assert system.components[2].patients[0].demand_met[1]['Nurse'] == 1.0
+
+        system.time_step = 3
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 7
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 7
+        system.receive_patients() 
+        system.update()  
+        distribution_model.distribute() 
+        assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
+        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5)
+        assert math.isclose(system.components[2].patients[1].demand_met[1]['Nurse'], 1/1.5)    
+        
+    def test_fuel_distribution(self):
+        system = self.initiate_system(self.EXCEL_INPUT_1)
+        system.time_step = 1
+        distribution_model = system.resources['Fuel']['DistributionModel']
+        distribution_model.distribute()
+        assert distribution_model.components[6].supply['Supply']['ElectricPower'].current_amount > 0
+
+        system.update()
+        distribution_model.components[7].supply['Supply']['Fuel'].current_amount = 0
+        distribution_model.distribute()
+        assert distribution_model.components[6].supply['Supply']['ElectricPower'].current_amount == 0
+
+        system.update()
+        distribution_model.components[7].supply['Supply']['Fuel'].current_amount = 400
+        distribution_model.distribute()
+        assert distribution_model.components[6].supply['Supply']['ElectricPower'].current_amount == 1000000 * 0.8
+
+        system.update()
+        distribution_model.components[7].supply['Supply']['Fuel'].current_amount = 500
+        distribution_model.distribute()
+        assert distribution_model.components[6].supply['Supply']['ElectricPower'].current_amount == 1000000
+
+    def test_oxygen_distribution(self):
+        system = self.initiate_system(self.EXCEL_INPUT_1)
+        distribution_model = system.resources['Oxygen']['DistributionModel']
+        # Oxygen Reservoir
+        distribution_model.components[11].supply['Supply']['Oxygen'].current_amount = 0
+        distribution_model.components[11].supply['Supply']['Oxygen'].initial_amount = 0
+        # Oxygen Concentrator
+        distribution_model.components[12].supply['Supply']['Oxygen'].current_amount = 0
+        distribution_model.components[12].supply['Supply']['Oxygen'].initial_amount = 0
+
+        system.set_initial_damage()
+        system.time_step = 1
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Oxygen'] == 0
+        system.update_patients()
+
+        distribution_model.components[11].supply['Supply']['Oxygen'].current_amount = 720
+        distribution_model.components[11].supply['Supply']['Oxygen'].initial_amount = 720
+        distribution_model.components[12].supply['Supply']['Oxygen'].current_amount = 0
+        distribution_model.components[12].supply['Supply']['Oxygen'].initial_amount = 0
+        system.time_step = 2
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Oxygen'] == 1.0
+        system.update_patients()
+
+        distribution_model.components[11].supply['Supply']['Oxygen'].current_amount = 360
+        distribution_model.components[11].supply['Supply']['Oxygen'].initial_amount = 360
+        distribution_model.components[12].supply['Supply']['Oxygen'].current_amount = 300
+        distribution_model.components[12].supply['Supply']['Oxygen'].initial_amount = 300
+        system.time_step = 3
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Oxygen'] == 0.0
+        assert system.components[2].patients[0].demand_met[1]['Oxygen'] == 0.0
+        system.update_patients()
+        assert system.components[1].patients[0].unmet_demand_info['Oxygen'] == [3]
+        assert system.components[2].patients[0].unmet_demand_info['Oxygen'] == [3]
+
+        distribution_model.components[11].supply['Supply']['Oxygen'].current_amount = 360
+        distribution_model.components[11].supply['Supply']['Oxygen'].initial_amount = 360
+        distribution_model.components[12].supply['Supply']['Oxygen'].current_amount = 360
+        distribution_model.components[12].supply['Supply']['Oxygen'].initial_amount = 360
+        system.time_step = 4
+        system.receive_patients()        
+        system.update() 
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['Oxygen'] == 1.0    
+        system.update_resilience_calculators()      
+        system.update()       
+        assert distribution_model.components[11].supply['Supply']['Oxygen'].current_amount == 0
+        assert distribution_model.components[12].supply['Supply']['Oxygen'].current_amount == 360       
+     
+class TestTimeStepsOfAutonomyDistributionModel(TestHospitalDistributionModel):
+    
+    def test_drugs_distribution(self):
+        system = self.initiate_system(self.EXCEL_INPUT_1)
+        system.components[0].patient_library['Patient 1'][0]['EmergencyDepartment']['ResourcesRequired'][7]['ResourceAmount'] = 1
+        system.components[0].patient_library['Patient 1'][1]['OperatingTheater']['ResourcesRequired'][7]['ResourceAmount'] = 1
+        distribution_model = system.resources['MedicalDrugs']['DistributionModel']
+        # Pharmacy
+        distribution_model.components[10].supply['Supply']['MedicalDrugs'].current_amount = 1
+        distribution_model.components[10].supply['Supply']['MedicalDrugs'].initial_amount = 1
+
+        system.set_initial_damage()
+        system.time_step = 1
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['MedicalDrugs'] == 1
+        system.update_patients()
+        system.update_resilience_calculators()
+
+        system.time_step = 2
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['MedicalDrugs'] == 0
+        assert system.components[2].patients[0].demand_met[1]['MedicalDrugs'] == 0
+        system.update_patients()
+        assert system.components[1].patients[0].unmet_demand_info['MedicalDrugs'] == [2]
+        assert system.components[2].patients[0].unmet_demand_info['MedicalDrugs'] == [2]
+        system.update_resilience_calculators()    
+
+        distribution_model.components[10].supply['Supply']['MedicalDrugs'].current_amount = 5
+        distribution_model.components[10].supply['Supply']['MedicalDrugs'].initial_amount = 5
+        for time_step in range(3, 7):
+            system.time_step = time_step
+            system.receive_patients()        
+            system.update()        
+            distribution_model.distribute()
+            assert system.components[1].patients[0].demand_met[0]['MedicalDrugs'] == 1
+            assert system.components[2].patients[0].demand_met[1]['MedicalDrugs'] == 1
+            assert system.components[2].patients[1].demand_met[1]['MedicalDrugs'] == 1
+            system.update_patients()
+            system.update_resilience_calculators()
+
+        system.time_step = 8
+        system.receive_patients()        
+        system.update()        
+        distribution_model.distribute()
+        assert system.components[1].patients[0].demand_met[0]['MedicalDrugs'] == 0
+        assert system.components[2].patients[0].demand_met[1]['MedicalDrugs'] == 0
+        assert system.components[2].patients[1].demand_met[1]['MedicalDrugs'] == 0
+        system.update_patients()
+        assert system.components[1].patients[0].unmet_demand_info['MedicalDrugs'] == [8]
+        assert system.components[2].patients[0].unmet_demand_info['MedicalDrugs'] == [8]
+        assert system.components[2].patients[1].unmet_demand_info['MedicalDrugs'] == [8]
+
+

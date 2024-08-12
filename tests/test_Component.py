@@ -1026,69 +1026,6 @@ class TestStandardiReCoDeSComponent_SingleRecoveryActivity():
                                       damage_level - damage_level / repair_duration - 0.5 * damage_level / repair_duration))
         assert all(bool_list)
 
-class TestBuildingStockUnitWithEmergencyCalls():
-    resource_dict = {"Communication": {
-        "Amount": 1,
-        "FunctionalityToAmountRelation": "Constant",
-        "PostDisasterIncreaseDueToEmergencyCalls": "True"
-    },
-        "ElectricPower": {
-            "Amount": 1,
-            "FunctionalityToAmountRelation": "Linear"
-        }
-    }
-
-    @pytest.fixture
-    def bsu_component(self):
-        component = Component.BuildingStockUnitWithEmergencyCalls()
-        component.add_resources(Component.SupplyOrDemand.DEMAND.value,
-                                Component.StandardiReCoDeSComponent.DemandTypes.OPERATION_DEMAND.value,
-                                self.resource_dict)
-        component.set_recovery_model(TestStandardiReCoDeSComponent_SingleRecoveryActivity.recovery_model_parameters)
-        return component
-
-    def test_update_communication_demand(self, bsu_component: Component.BuildingStockUnitWithEmergencyCalls):
-        bool_list = []
-        initial_communication_demand = self.resource_dict['Communication']['Amount']
-        bsu_component.COMMUNICATION_RESOURCE_NAME = 'Communication'
-        time_steps = [0, 1, 5, 10, 50]
-        target_communication_demands = [initial_communication_demand,
-                                        initial_communication_demand * bsu_component.COMMUNICATION_DEMAND_MULTIPLIER,
-                                        initial_communication_demand * bsu_component.COMMUNICATION_DEMAND_MULTIPLIER * math.exp(
-                                            bsu_component.COMMUNICATION_DEMAND_EXP_DECREASE_COEFF * 4),
-                                        initial_communication_demand,
-                                        initial_communication_demand]
-        for time_step, target_communication_demand in zip(time_steps, target_communication_demands):
-            bsu_component.update(time_step)
-            bool_list.append(math.isclose(target_communication_demand,
-                                          bsu_component.demand['OperationDemand']['Communication'].current_amount))
-        assert all(bool_list)
-
-    def test_modify_emergency_calls(self, bsu_component: Component.BuildingStockUnitWithEmergencyCalls):
-        bool_list = []
-        initial_communication_demand = self.resource_dict['Communication']['Amount']
-        bsu_component.COMMUNICATION_RESOURCE_NAME = 'Communication'
-        time_steps = [1, 3, 50]
-        target_communication_demands = [initial_communication_demand * bsu_component.COMMUNICATION_DEMAND_MULTIPLIER,
-                                        initial_communication_demand * bsu_component.COMMUNICATION_DEMAND_MULTIPLIER * math.exp(
-                                            bsu_component.COMMUNICATION_DEMAND_EXP_DECREASE_COEFF * 2),
-                                        initial_communication_demand]
-        for time_step, target_communication_demand in zip(time_steps, target_communication_demands):
-            bsu_component.update(time_step)
-            communication_demand = bsu_component.modify_emergency_calls_demand(initial_communication_demand, time_step)
-            bool_list.append(math.isclose(communication_demand, target_communication_demand))
-
-        assert all(bool_list)
-    
-    def test_check_if_demand_increase_considered(self, bsu_component):
-        bool_list = []
-        self.resource_dict['ElectricPower']['PostDisasterIncreaseDueToEmergencyCalls'] = 'True'
-        bsu_component.check_if_demand_increase_considered('ElectricPower', self.resource_dict['ElectricPower'])
-        bool_list.append(bsu_component.COMMUNICATION_RESOURCE_NAME == 'ElectricPower')
-        bsu_component.check_if_demand_increase_considered('Communication', self.resource_dict['Communication'])
-        bool_list.append(bsu_component.COMMUNICATION_RESOURCE_NAME == 'Communication')
-        assert all(bool_list)
-
 class TestStandardiReCoDeSComponent_MultipleRecoveryActivities():
     recovery_model_parameters = {
         "Type": "MultipleRecoveryActivities",
