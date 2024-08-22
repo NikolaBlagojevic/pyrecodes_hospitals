@@ -6,7 +6,6 @@ from pyrecodes_hospitals import Component
 import pickle
 from pyrecodes_hospitals import ResilienceCalculator
 
-
 class System(ABC):
     components: list([Component.Component])
     resources: dict
@@ -317,4 +316,3 @@ class HospitalSystem(BuiltEnvironmentSystem):
         if progressBar is not None:
             progressBar.setProperty("value", (self.time_step/self.MAX_TIME_STEP)*100)
             app.processEvents()
-            # progressBar.repaint()

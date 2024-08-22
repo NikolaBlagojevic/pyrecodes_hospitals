@@ -60,8 +60,6 @@ class NISTGoalsResilienceCalculator(ReCoDeSResilienceCalculator):
         pass
 
     def update(self, resources: dict):
-        # compare demand and consumption and check if the goal is met
-        # if its met, save the time step in a bool list and then in the end in calculate resilience method get the first time step when the goal is met and maintained
         pass
 
     def calculate_resilience(self):
@@ -139,7 +137,7 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
         all_patients = self.collect_all_patients(components, time_interval)
         dead_patients_count = 0
         for patient in all_patients:
-            if patient.alive == False: # self.patient_died_within_time_interval(patient, time_interval):
+            if patient.alive == False:
                 # make sure that if the scope is a single component, the patient died in that component and not in others
                 if patient.flow[-2]['Department'] in self.scope or self.scope == ['All']: 
                     dead_patients_count += 1
@@ -211,15 +209,6 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
         else:
             return patient.name in self.resources
     
-    # def patient_died_within_time_interval(self, patient: Patient.PatientType, time_interval: list) -> bool:
-    #     if patient.alive == False:
-    #         if patient.flow[-1]['Department'] == patient.EXIT and len(patient.flow[-1]['TimeStepAtDepartment']) > 0: 
-    #             return patient.flow[-1]['TimeStepAtDepartment'][0] < time_interval[1]
-    #         else:
-    #             return patient.flow[-2]['TimeStepAtDepartment'][-1] < time_interval[1]
-    #     else:
-    #         return False
-        
     def calculate_average_length_of_stay(self, components: list) -> float:
         all_patients = self.collect_all_patients(components)
         length_of_stay = []
@@ -263,14 +252,12 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
             for patient in component.patients:
                 if self.patient_type_considered(patient):
                     if self.scope == ['All']:
-                        # if time_interval[0] <= patient.flow[0]['TimeStepAtDepartment'][0] < time_interval[1]:
                         if time_interval[0] <= self.calculate_length_of_stay(patient, scope=['All']) < time_interval[1]:
                             all_patients.append(patient)
                     else:
                         for department_info in patient.flow:
                             if department_info['Department'] in self.scope:
                                 if len(department_info['TimeStepAtDepartment']) > 0:
-                                    # if time_interval[0] <= patient.flow[0]['TimeStepAtDepartment'][0] < time_interval[1]:
                                     if time_interval[0] <= self.calculate_length_of_stay(patient, scope=['All']) < time_interval[1]:
                                         all_patients.append(patient)
                                     break                        

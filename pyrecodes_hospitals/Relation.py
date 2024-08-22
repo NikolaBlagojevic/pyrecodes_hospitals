@@ -2,10 +2,8 @@
 from abc import ABC, abstractmethod
 import math
 import bisect
-import numpy as np
 
 ABS_TOL = 1e-10
-
 
 class Relation(ABC):
     """

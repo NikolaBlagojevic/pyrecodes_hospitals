@@ -1,11 +1,8 @@
 
 from abc import ABC, abstractmethod
 import random
-import numpy as np
 from pyrecodes_hospitals import Component
 import copy
-from enum import Enum
-
 
 class DistributionPriority(ABC):
     """

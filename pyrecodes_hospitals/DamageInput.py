@@ -32,7 +32,6 @@ class ConcreteDamageInput(DamageInput):
 
 class ListDamageInput(ConcreteDamageInput):
 
-    # where are the parameters set?
     def get_initial_damage(self):
         self.damage_levels = self.parameters
 

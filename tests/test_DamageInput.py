@@ -3,10 +3,7 @@ from pyrecodes_hospitals import DamageInput
 from pyrecodes_hospitals import SystemCreator
 from pyrecodes_hospitals import System
 from pyrecodes_hospitals import ComponentLibraryCreator
-from pyrecodes_hospitals import Component
 from pyrecodes_hospitals import main
-import numpy as np
-import pandas as pd
 
 class TestListDamageInput():
     system_configuration_file = './tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_SystemConfiguration.json'

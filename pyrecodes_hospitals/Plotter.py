@@ -32,7 +32,6 @@ class Plotter():
         [supply, demand, consumption] = self.add_warmup(warmup, [supply, demand, consumption])
         axis_object.plot(time_steps, supply, label=supply_label)
         axis_object.plot(time_steps, demand, label=demand_label)
-        # axis_object.plot(time_steps, consumption, label=consumption_label)
         axis_object.fill_between(time_steps, demand, consumption,
                          label='Unmet Demand', alpha=self.LOR_ALPHA)
         axis_object.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3)

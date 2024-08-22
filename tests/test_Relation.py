@@ -2,7 +2,6 @@ import pytest
 from pyrecodes_hospitals import Relation
 import math
 
-
 class TestRelation():
     test_values = [0.0, 0.3, 0.5, 0.8, 1.0]
 

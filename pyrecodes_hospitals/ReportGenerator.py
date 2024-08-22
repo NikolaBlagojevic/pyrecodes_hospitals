@@ -177,11 +177,10 @@ def add_measures_of_service_summary(system, doc):
             for patient_type_id, patient_type in enumerate(patient_types):
                 resilience_calculator = MCI_Planning_Tool_GUI.get_resilience_calculator(system, department.replace(' ',''), patient_type, resilience_calculator_class=ResilienceCalculator.HospitalMeasureOfServiceCalculator)
                 row_cells = table.rows[patient_type_id+1].cells
-                # row_cells[0].text = patient_type
                 if row_cells[0].text == '':
                     patient_type_string = row_cells[0].paragraphs[0].add_run(patient_type)
                     patient_type_string.bold = True
-                # row_cells[department_id+1].text = format_measure_of_service_value(resilience_calculator, measure_of_service)                
+               
                 measure_of_service_string = row_cells[department_id+1].paragraphs[0].add_run(format_measure_of_service_value(resilience_calculator, measure_of_service))
                 
                 if measure_of_service == 'MortalityRateBefore24H' or measure_of_service == 'MortalityRateAfter24H':

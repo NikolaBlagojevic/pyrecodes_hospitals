@@ -8,7 +8,6 @@ import itertools
 from pyrecodes_hospitals import Component
 from pyrecodes_hospitals import DistributionPriority
 
-
 class ResourceDistributionModel(ABC):
 
     @abstractmethod
@@ -128,12 +127,7 @@ class SingleResourceSystemMatrixCreator():
         return component_properties
 
     def get_current_resource_amount(self, component: Component.Component, supply_or_demand: str, type: str):
-        return component.get_current_resource_amount(supply_or_demand, type, self.resource_name)
-        # resource = getattr(component, supply_or_demand)[type].get(self.resource_name, None)
-        # if not (resource is None):
-        #     return resource.current_amount
-        # else:
-        #     return 0.0        
+        return component.get_current_resource_amount(supply_or_demand, type, self.resource_name)      
 
     def get_initial_demand_met_indicator(self) -> float:
         return 1.0
@@ -211,7 +205,6 @@ class UtilityDistributionModel(ResourceDistributionModel):
         component_localities = [self.system_matrix.matrix[component_row_id, self.system_matrix.START_LOCALITY_COL_ID],
                                 self.system_matrix.matrix[component_row_id, self.system_matrix.END_LOCALITY_COL_ID]]
         if component_demand > 0.0:
-            # initial_suppliers = copy.deepcopy(suppliers)
             transfer_service_demand = self.get_transfer_service_demand(component_row_id, component_demand_type)
             component_demand_after_distribution, suppliers = self.suppliers_meet_component_demand(suppliers,
                                                                                                   component_demand,  
@@ -224,8 +217,7 @@ class UtilityDistributionModel(ResourceDistributionModel):
                 if component_demand_type == Component.StandardiReCoDeSComponent.DemandTypes.OPERATION_DEMAND.value:
                     self.reduce_component_supply(component_row_id, percent_of_met_demand)
                 elif component_demand_type == Component.StandardiReCoDeSComponent.DemandTypes.RECOVERY_DEMAND.value:
-                    self.set_unmet_demand_for_recovery_activities(component_row_id, percent_of_met_demand)
-                # suppliers = self.reset_suppliers(initial_suppliers)     
+                    self.set_unmet_demand_for_recovery_activities(component_row_id, percent_of_met_demand)     
 
         return suppliers
 
@@ -364,12 +356,6 @@ class UtilityDistributionModel(ResourceDistributionModel):
             return np.sum(np.multiply(self.system_matrix.matrix[components_to_include, self.system_matrix.DEMAND_COL_ID],
                                   self.system_matrix.matrix[components_to_include, self.system_matrix.DEMAND_MET_COL_ID]))
 
-
-class HousingDistributionModel(ResourceDistributionModel):
-    # TODO: Implement if housing distribution is significantly different then utility distribution.
-    # this might happen if building housing supply and demand are not the same
-    # demand lower than supply, then people from one house move to the next
-    pass
 
 class TimeStepsOfAutonomyDistributionModel(ResourceDistributionModel):
     """

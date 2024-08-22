@@ -2,7 +2,6 @@ import pytest
 from pyrecodes_hospitals import Resource
 from pyrecodes_hospitals import Relation
 
-
 class TestConcreteResource():
 
     NAME = 'Resource 1'

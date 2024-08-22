@@ -1,11 +1,8 @@
 
 import pytest
-import math
-import copy
 from pyrecodes_hospitals import SystemCreator
 from pyrecodes_hospitals import ComponentLibraryCreator
 from pyrecodes_hospitals import Component
-
 
 class TestThreeLocalitiesJSONSystemCreator():
     COMPONENT_LIBRARY_FILE = "./tests/test_inputs/test_inputs_ThreeLocalitiesCommunity_ComponentLibrary.json"

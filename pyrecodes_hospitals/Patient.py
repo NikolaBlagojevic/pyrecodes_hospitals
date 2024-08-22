@@ -80,10 +80,7 @@ class PatientType():
         if not(self.out_of_hospital()):
             self.set_current_baseline_mortality_rate()   
             self.set_current_baseline_length_of_stay()     
-            if not(self.resource_demand_met()):               
-            # elif self.patient_untreated_for_too_long():
-            #     self.mortality_rate = 1.0
-            #     self.patient_not_treated()             
+            if not(self.resource_demand_met()):                            
                 self.check_consequences_of_unmet_demand(time_step)
                 # set all demand to met so that during resource distribution only unmet demand is set, as it is implemented now
                 self.set_all_demand_as_met()
@@ -175,14 +172,11 @@ class PatientType():
     
     def patient_untreated_for_too_long(self):
         return self.get_current_length_of_stay() >= self.length_of_stay
-        # return self.get_current_length_of_stay() >= self.maximal_lengths_of_stay[self.get_current_department_id()]
     
     def resource_demand_met(self) -> bool: 
         return all([demand_met == 1.0 for demand_met in self.demand_met[self.get_current_department_id()].values()])
     
     def update_resource_demand_met(self, resource_name: str, demand_met: float) -> None:
-        # Avoid Exit department - no resource demands there
-        #if self.flow[self.get_current_department_id()]['Department'] != 'Exit':
         if resource_name in self.demand_met[self.get_current_department_id()].keys():
             self.demand_met[self.get_current_department_id()][resource_name] = demand_met
 

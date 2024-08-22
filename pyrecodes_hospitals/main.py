@@ -86,8 +86,6 @@ def format_stress_scenario_patients(excel_input_data: dict, stress_scenario_dict
     stress_scenario_dict = update_default_dict(excel_input_data['StressScenario'], stress_scenario_dict, excel_to_dict_map[:standard_mapping], excel_key_type='row_col')
     time_stepping_indices = np.where(excel_input_data['StressScenario'] == excel_to_dict_map[standard_mapping][0][0])
     time_stepping = excel_input_data['StressScenario'].iloc[time_stepping_indices[0][0]+1:, time_stepping_indices[1][0]].values.tolist()    
-    # patient_types_indices = np.where(excel_input_data['StressScenario'] == excel_to_dict_map[standard_mapping+1][0][0])
-    # patient_types = excel_input_data['StressScenario'].iloc[patient_types_indices[0][0]+1, patient_types_indices[1][0]:].values.tolist()
     patient_types = get_patient_types(excel_input_data)
     for patient_type in patient_types:
         patient_admission_dict = {'Resource': patient_type,
@@ -195,7 +193,6 @@ def format_stress_scenario_file(excel_input_data: dict, MCI_scenario_parameters:
         json.dump(stress_scenario_dict, file)
 
 def format_patient_library_file(excel_input_data: dict, input_dict: dict, additional_data_location: str, department_column_offset=6, data_source_string='Data source') -> None:
-    # patient_library_dict = read_file(read_file(input_dict['ComponentLibrary']['ComponentLibraryFile'])["PatientSource"]["PatientLibrary"])
     patient_library_dict = {}
     EXIT = {"EXIT": {
                 "BaselineLengthOfStay": BIG_NUMBER,
@@ -315,7 +312,6 @@ def format_resilience_calculators(system_configuration_dict: dict, patient_types
                 }
             })
 
-    # add cause of death resilience calculator
     resilience_calculators.append({
         "Type": "CauseOfDeathCalculator",
         "Parameters": {
@@ -361,7 +357,6 @@ def get_mortality_rate_per_time_step(mortality_rate_during_entire_stay: float, l
     elif mortality_rate_during_entire_stay == 0:
         return 0
     else:
-        # mortality_rate_per_time_step = mortality_rate_during_entire_stay/length_of_stay
         try:
             mortality_rate_per_time_step = scipy.optimize.newton(binomial_dist_equation_to_solve, mortality_rate_during_entire_stay/length_of_stay, args=(mortality_rate_during_entire_stay, length_of_stay), tol=1e-10, maxiter=1000)
         except RuntimeError:

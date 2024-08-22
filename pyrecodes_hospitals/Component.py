@@ -277,12 +277,6 @@ class StandardiReCoDeSComponent(Component):
     def has_resource_supply(self, resource_name: str) -> bool:
         return resource_name in list(self.supply[self.SupplyTypes.SUPPLY.value].keys())
 
-    # def add_resources(self, supply_or_demand: str, type: str, resource_dict: dict) -> None:
-    #     place_to_add = getattr(self, supply_or_demand)[type]
-    #     for resource_name, resource_parameters in resource_dict.items():
-    #         resource = Resource.ConcreteResource(resource_name, resource_parameters)
-    #         place_to_add[resource_name] = resource
-
     def add_resources(self, supply_or_demand: str, type: str, resource_dict: dict) -> None:
         place_to_add = getattr(self, supply_or_demand)[type]
         for resource_name, resource_parameters in resource_dict.items():
@@ -666,11 +660,6 @@ class PatientSource(HospitalComponent):
             return 0
         else:
             return resource_dynamic['Amount'][amount_id[0]]  
-        # amount_id = [i for i, value in enumerate(resource_dynamic['AtTimeStep'][:-1]) 
-        #              if value <= time_step < resource_dynamic['AtTimeStep'][i+1]]
-        # if len(amount_id) == 0:
-        #     amount_id = [len(resource_dynamic['AtTimeStep'])-1]
-        # return resource_dynamic['Amount'][amount_id[0]]
     
     def create_patients(self, time_step: int) -> None:
         self.update_resources_based_on_predefined_resource_dynamics(time_step)

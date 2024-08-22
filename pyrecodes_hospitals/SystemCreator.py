@@ -6,10 +6,6 @@ from pyrecodes_hospitals import ResilienceCalculator
 import json
 import copy
 import math
-import pandas as pd
-import geopandas as gpd
-import shapely
-
 
 class SystemCreator(ABC):
     """
@@ -170,182 +166,6 @@ class JSONSystemCreator(ConcreteSystemCreator):
                 component_object = self.get_component_object(link_type)
                 component_object.set_locality([self.format_locality_id(locality), self.format_locality_id(link_to)])
                 self.add_component(component_object)
-
-class R2DSystemCreator(ConcreteSystemCreator):
-    """
-    Create a System based on SimCenter R2D Tool's output files for Example 1.
-    """
-
-    components: list([Component])
-    scenario_id: int
-    area_per_person: dict  # in sqft
-
-    def setup(self, component_library: dict, file_name: str) -> None:
-        super().setup(component_library, file_name)
-        self.set_building_area_per_person()
-        self.scenario_id = self.system_configuration_file["DamageInput"]["Parameters"]["ScenarioID"]
-        self.set_component_parameters_setter()
-        
-    def set_building_area_per_person(self) -> None:
-        self.building_area_per_person = {}
-        for locality, locality_content in self.system_configuration_file["Content"].items():
-            self.building_area_per_person[locality] = locality_content['ComponentsInLocality']['AreaPerPerson']
-    
-    def set_component_parameters_setter(self) -> None:
-        system_level_data = {key: self.__dict__.get(key, None) for key in R2DResidentialBuildingParametersSetter.SYSTEM_LEVEL_DATA_REQUIRED_FOR_BUILDINGS}
-        self.component_parameters_setter = R2DResidentialBuildingParametersSetter(system_level_data)        
-
-    def create_components_in_localities(self, locality: str, content: dict) -> list([Component.Component]):
-        self.components += self.create_recovery_resource_suppliers(locality, content)
-        self.components += self.create_residential_building_components(locality, content)     
-
-    def create_recovery_resource_suppliers(self, locality: str, content: dict) -> list([Component.Component]):
-        suppliers = []
-        for component_name in content.get('RecoveryResourceSuppliers', []):
-            component = copy.deepcopy(self.component_library[component_name])
-            component.set_locality([self.format_locality_id(locality)])
-            suppliers.append(component)
-        return suppliers
-
-    def create_residential_building_components(self, locality: str, content: dict) -> list([Component.Component]):
-        building_info_folder = content['BuildingsInfoFolder']
-        building_id_range = range(content['BuildingIDsRange'][0],
-                                  content['BuildingIDsRange'][1])
-        bounding_box = content['Coordinates']['BoundingBox']
-        max_num_buildings = content['MaxNumBuildings']
-        num_buildings = 0
-        components = []
-        for building_id in building_id_range:
-            building_data = self.load_building_data(building_id, building_info_folder)
-            building_location = self.get_building_location(building_data)
-            if self.building_location_inside_bounding_box(building_location,
-                                                          bounding_box) and self.building_is_residential(building_data):
-                components.append(self.create_residential_building(locality, building_data))
-                num_buildings += 1
-                if num_buildings >= max_num_buildings:
-                    break
-        return components
-
-    def load_building_data(self, building_id: int, building_info_folder: str) -> dict:
-        building_json_name = str(building_id) + '-BIM.json'
-        building_data = {}
-        with open(building_info_folder + str(building_id) + '/' + building_json_name, 'r') as file:
-            building_data['Information'] = json.load(file)
-        with open(building_info_folder + str(building_id) + '/' + 'DL_summary.csv', 'r') as file:
-            building_data['Damage'] = pd.read_csv(file)
-        return building_data
-
-    @staticmethod
-    def get_building_location(building_data: dict) -> list:
-        return [building_data['Information']['GeneralInformation']['Latitude'],
-                building_data['Information']['GeneralInformation']['Longitude']]
-
-    @staticmethod
-    def building_location_inside_bounding_box(building_location: list, bounding_box: dict) -> bool:
-        # TODO: this can be optimized if needed. polygon created only once per locality, building locations in a list for vectorization
-        polygon = shapely.Polygon([(lat, long) for lat, long in zip(bounding_box['Latitude'], bounding_box['Longitude'])])
-        building_centroid = shapely.Point(building_location[0], building_location[1])
-        return building_centroid.within(polygon)
-
-    @staticmethod
-    def building_is_residential(building_data: dict) -> bool:
-        return 'RES' in building_data['Information']['GeneralInformation']['OccupancyClass']
-
-    def create_residential_building(self, locality, building_data) -> Component.Component:
-        building_DS = self.get_building_damage_state(building_data)        
-        component_template = copy.deepcopy(self.component_library[f'DS{building_DS}_ResidentialBuilding'])
-        building_data['HousingResources'] = ['Shelter'] #TODO: instead of hardcoding get the housing resource name from system configuration file
-        residential_building = self.component_parameters_setter.set_parameters(component_template, locality, building_data, building_DS)
-        return residential_building
-
-    def get_building_damage_state(self, building_data: dict) -> int:
-        return building_data['Damage']['highest_damage_state/S'][self.scenario_id]
-
-class R2DSystemWithInterfacesCreator(R2DSystemCreator):
-    """
-    Create a System based on SimCenter R2D Tool's output files for Example 1 with infrastructure interfaces.
-    """
-
-    def create_components_in_localities(self, locality: str, content: dict) -> list([Component.Component]):
-        super().create_components_in_localities(locality, content)        
-        self.components += self.create_infrastructure_service_suppliers(locality, content)
-        
-    def create_infrastructure_service_suppliers(self, locality: str, content: dict) -> list([Component.Component]):
-        suppliers = []
-        for interface_dict in content['Infrastructure']:
-            component = copy.deepcopy(self.component_library[list(interface_dict.keys())[0]])
-            self.set_infrastructure_system_parameters(component, list(interface_dict.values())[0])
-            component.set_locality([self.format_locality_id(locality)])
-            suppliers.append(component)
-        return suppliers
-    
-    def set_infrastructure_system_parameters(self, component: Component.Component, interface_parameters: dict) -> None:
-        component.set_supply_dynamics(interface_parameters)   
-        if 'Demand' in interface_parameters:
-            self.component_parameters_setter.set_component_operation_demand(component, interface_parameters['Demand']['Resource'], interface_parameters['Demand']['Amount'])     
-        # self.set_infrastructure_restoration_time(component, interface_parameters['RestoredIn'])
-        # self.set_component_supply(component, interface_parameters['Resource'], interface_parameters["Amount"])
-    
-    # def set_infrastructure_restoration_time(self, component: Component.Component, restoration_time: dict) -> None:
-    #     component.recovery_model.recovery_activity.set_duration(restoration_time)
-    
-    def create_residential_building(self, locality, building_data) -> Component.Component:
-        building_DS = self.get_building_damage_state(building_data)        
-        component_template = copy.deepcopy(self.component_library[f'DS{building_DS}_ResidentialBuilding'])
-        building_data['HousingResources'] = ['Shelter', 'FunctionalHousing']
-        building_data['OperationDemandResources'] = ['ElectricPower', 'PotableWater', 'CellularCommunication']
-        residential_building = self.component_parameters_setter.set_parameters(component_template, locality, building_data, building_DS)
-        return residential_building
-
-class ShapefileSystemCreator(ConcreteSystemCreator):
-    """
-    Create a System from a shapefile.
-    """    
-    
-    def create_residential_building_components(self, locality: str, content: dict) -> list([Component.Component]):        
-        building_info_shapefile = gpd.read_file(content['ComponentsInLocality']['BuildingsInfoShapefile'])         
-        bounding_box = content['Coordinates']['BoundingBox']
-        max_num_buildings = content['ComponentsInLocality']['MaxNumBuildings']
-        num_buildings = 0
-        components = []
-        for building_id in range(building_info_shapefile.shape[0]):
-            building_data = building_info_shapefile.iloc[building_id]
-            building_location = self.get_building_location(building_data)
-            if self.building_location_inside_bounding_box(building_location, bounding_box):                                                          
-                components.append(self.create_residential_building(locality, building_data))
-                num_buildings += 1
-                if num_buildings >= max_num_buildings:
-                    break
-        return components
-    
-    @staticmethod
-    def get_building_location(building_data: dict) -> list:
-        return [building_data.geometry.centroid.y,
-                building_data.geometry.centroid.x]
-    
-    def create_residential_building(self, locality, building_data) -> Component.Component:
-        building_DS = self.get_building_damage_state(building_data)
-        component = copy.deepcopy(self.component_library[f'DS{building_DS}_ResidentialBuilding'])
-        building_housing_capacity = self.get_building_housing_capacity(locality, building_data)
-        self.set_building_housing_supply(component, building_housing_capacity)
-        self.set_building_housing_demand(component, building_housing_capacity)      
-        self.set_repair_demand(component, building_data)     
-        self.set_building_footprint(component, building_data)
-        self.set_building_num_stories(component, building_data)
-        component.set_locality([self.format_locality_id(locality)])
-        return component
-    
-    def get_building_damage_state(self, building_data: dict) -> int:
-        return int(building_data['DS'][-1])    
-    
-    def get_total_building_area(self, building_data: dict) -> float:
-        return building_data.geometry.area
-    
-    def set_building_footprint(self, component: Component.Component, building_data: dict) -> None:
-        component.footprint = str(building_data.geometry).replace('POLYGON ', 'POLYGON')
-    
-    def set_building_num_stories(self, component: Component.Component, building_data: dict) -> None:
-        component.num_stories = 1
     
 class ComponentParametersSetter:
     """
@@ -437,10 +257,6 @@ class R2DResidentialBuildingParametersSetter(ComponentParametersSetter):
 
     def get_repair_crew_demand(self, building_DS: int, building_area: float) -> int:
         repair_crew_demand = math.ceil(building_area / self.system_level_data['REPAIR_CREW_DEMAND_PER_SQFT'][f'DS{building_DS}'])
-        # if building_DS in [1, 2]:
-        #     repair_crew_demand = math.ceil(building_area / self.REPAIR_CREW_PER_SQFT)
-        # elif building_DS in [3, 4]:
-        #     repair_crew_demand = 2 * math.ceil(building_area / self.REPAIR_CREW_PER_SQFT)
         return min(self.system_level_data['MAX_REPAIR_CREW_DEMAND_PER_BUILDING'], repair_crew_demand)
 
     def set_repair_duration(self, component: Component.Component, building_data: dict) -> None:
@@ -465,9 +281,6 @@ class R2DResidentialBuildingParametersSetter(ComponentParametersSetter):
     def set_building_repair_cost(self, component: Component.Component, building_data: dict) -> None:
         repair_cost = building_data['Damage']['reconstruction/cost'][self.system_level_data['scenario_id']]
         self.set_component_recovery_demand(component, 'Financing', 'Money', repair_cost)
-        # financing = component.recovery_model.recovery_activities.get('Financing', None)
-        # if financing:
-        #     repair_cost = building_data['Damage']['reconstruction/cost'][system_level_data['scenario_id']]            
-        #     financing.set_demand([{'Resource': 'Money', 'Amount': repair_cost}])
+
 
     

@@ -359,6 +359,16 @@ class TestPatientType():
         assert output == 0.01
         output = patient.update_patient_when_nurses_missing('Resource_1', 0.9, 1.0, patient.mortality_rate)
         assert output == 0.01
+
+        patient.set_current_baseline_length_of_stay()
+        output = patient.update_patient_when_nurses_missing('Resource_1', 0.9, 1.0, patient.lengths_of_stay[0])
+        assert output == 8
+        output = patient.update_patient_when_nurses_missing('Resource_1', 1.0, 0.5, patient.lengths_of_stay[0])
+        assert output == 8
+        output = patient.update_patient_when_nurses_missing('Resource_1', 1.2, 0.5, patient.lengths_of_stay[0])
+        assert output == 8 * 1.2**5
+        output = patient.update_patient_when_nurses_missing('Resource_1', 1.2, 0.9, patient.lengths_of_stay[0])
+        assert output == 8 * 1.2
     
     def test_patient_not_treated(self):
         patient = Patient.PatientType()

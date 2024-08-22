@@ -2,7 +2,6 @@ import math
 import numpy as np
 from pyrecodes_hospitals import ProbabilityDistribution
 
-
 class TestProbabilityDistribution():
 
     def test_deterministic(self):

@@ -115,7 +115,7 @@ class ConcreteRecoveryActivity(RecoveryActivity):
             resource_parameters = {'Amount': resource['Amount']}          
             self.demand[resource_name] = Resource.ConcreteResource(resource_name, resource_parameters)
 
-    # single demand met but multiple resources possible in set_demand? fix this
+    # single demand met but multiple resources possible in set_demand? This should be fixed later.
     def set_demand_met(self, demand_met: float) -> None:
         if 0 <= demand_met <= 1:
             self.demand_met = demand_met
@@ -129,7 +129,7 @@ class ConcreteRecoveryActivity(RecoveryActivity):
         if self.demand_met > 0 and not (self.activity_finished()):
             self.record_progress(time_step)
             self.level = min(self.level + self.rate * self.demand_met,
-                             1.0)  # proveri kako rade zajedno duration i rate!
+                             1.0) 
 
     def record_progress(self, time_step: int) -> None:
         if time_step >= 0:
@@ -193,9 +193,7 @@ class NoRecoveryActivity(RecoveryModel):
             raise ValueError('Initial damage level for NoRecoveryActivity model must be 0.')
 
     def set_damage_functionality(self, damage_functionality_relation: dict) -> None:
-        pass
-        # target_damage_functionality = getattr(Relation, damage_functionality_relation['Type'])
-        # self.damage_to_functionality_relation = target_damage_functionality()    
+        pass   
 
     def set_activities_demand_to_met(self) -> None:
         pass
@@ -205,7 +203,6 @@ class NoRecoveryActivity(RecoveryModel):
 
     def get_functionality_level(self) -> float:
         return 1.0
-        # return self.damage_to_functionality_relation.get_output(self.get_damage_level())
 
     def get_damage_level(self) -> float:
         return 0
@@ -285,8 +282,7 @@ class MultipleRecoveryActivities(RecoveryModel):
 
     def __init__(self, REPAIR_ACTIVITY_NAME = 'Repair') -> None:
         self.recovery_activities = {}
-        self.REPAIR_ACTIVITY_NAME = REPAIR_ACTIVITY_NAME
-        # TODO: Check if some default parameters are needed here.        
+        self.REPAIR_ACTIVITY_NAME = REPAIR_ACTIVITY_NAME     
 
     def set_parameters(self, parameters: dict) -> None:
         for recovery_activity, recovery_activity_parameters in parameters.items():
