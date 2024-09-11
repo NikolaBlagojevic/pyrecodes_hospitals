@@ -577,7 +577,7 @@ class HospitalComponent(StandardiReCoDeSComponent):
         """
         patients_with_demand = self.get_patients_with_demand(resource_name)
         if resource_name == 'Nurse':
-            self.distribute_resource_among_patients_evenly(resource_name, percent_of_met_demand, patients_with_demand)
+            self.distribute_resource_among_patients_evenly_within_the_same_patient_profile(resource_name, percent_of_met_demand, patients_with_demand)
         else:
             self.distribute_resource_among_patients_priority(resource_name, percent_of_met_demand, patients_with_demand)
     
@@ -587,28 +587,44 @@ class HospitalComponent(StandardiReCoDeSComponent):
         for i, patient in enumerate(patients_with_demand):
             if i >= number_of_patients_with_met_demand:
                 patient.update_resource_demand_met(resource_name, 0.0) 
-    
-    def prioritize_patients(self, patients_with_demand: list) -> list:
-        # Prioritization of patients based on the patient triage category
-        # The order of the categories is defined in the PRIORITIZED_PATIENTS_LIST
-        
+
+    def categorize_patients(self, patients: list):
+        # Categorize patients based on their patient profile (i.e., patient.name) and the PRIORITIZED_PATIENTS_LIST.
         categorized_patients = {category: [] for category in self.PRIORITIZED_PATIENTS_LIST}
-        for patient in patients_with_demand:
+        for patient in patients:
             for category in self.PRIORITIZED_PATIENTS_LIST:
                 if category in patient.name:
                     categorized_patients[category].append(patient)
                     break
             else:
                 categorized_patients[category].append(patient)
-        
+        return categorized_patients
+    
+    def prioritize_patients(self, patients_with_demand: list) -> list:
+        # Prioritization of patients based on the patient triage category
+        # The order of the categories is defined in the PRIORITIZED_PATIENTS_LIST
+        categorized_patients = self.categorize_patients(patients_with_demand)
+
         prioritized_patients = []
         for category in self.PRIORITIZED_PATIENTS_LIST:
             prioritized_patients += categorized_patients[category]
         return prioritized_patients
     
-    def distribute_resource_among_patients_evenly(self, resource_name: str, percent_of_met_demand: float, patients_with_demand: list) -> None:
-        for patient in patients_with_demand:
-            patient.update_resource_demand_met(resource_name, percent_of_met_demand)
+    def distribute_resource_among_patients_evenly_within_the_same_patient_profile(self, resource_name: str, percent_of_met_demand: float, patients_with_demand: list) -> None:
+        # This method is foremost written for distributing Nurses among patients.
+        # If in a department there are different pateint profiles, the resource is distributed evenly among patients within the same patient profile.
+        # But some patient profiles are prioritized over others, depending on the PRIORITIZED_PATIENTS_LIST.
+        total_demand = self.demand[self.DemandTypes.OPERATION_DEMAND.value][resource_name].current_amount
+        met_demand = total_demand * percent_of_met_demand
+        categorized_patients = self.categorize_patients(patients_with_demand)
+        for patient_category in self.PRIORITIZED_PATIENTS_LIST:
+            patients = categorized_patients[patient_category]
+            total_demand_per_category = sum([patient.get_resource_demand()[resource_name] for patient in patients])
+            if met_demand < total_demand_per_category:            
+                demand_met_per_patient = round(met_demand / total_demand_per_category, 5) # to avoid 0.99999 being registered as unmet demand
+                for patient in patients:
+                    patient.update_resource_demand_met(resource_name, demand_met_per_patient)
+            met_demand = max(met_demand - total_demand_per_category, 0)
 
     def get_patients_with_demand(self, resource_name: str) -> list:
         patients_with_demand = []
