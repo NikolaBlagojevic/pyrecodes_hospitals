@@ -270,7 +270,6 @@ class UtilityDistributionModel(ResourceDistributionModel):
     def get_transfer_service_demand(self, component_row_id: int, demand_type: str) -> float:
         """Method assumes that the transfer service demand is the same as the demand for the utility resource."""
         resource_name = self.resource_name
-        # consider moving if statement to a separate method
         if demand_type == Component.StandardiReCoDeSComponent.DemandTypes.RECOVERY_DEMAND.value:
             component_row_id -= self.system_matrix.RECOVERY_DEMAND_ROW_OFFSET
         return self.components[component_row_id].get_current_resource_amount(
@@ -514,18 +513,3 @@ class TransferServiceDistributionModelPotentialPathSets(ResourceDistributionMode
     def get_total_consumption(self, scope: str) -> float:
         print(f'System consumption for transfer service {self.resource_name} not defined yet.')   
         return None
-
-class BridgeServiceDistributionModel(ResourceDistributionModel):       
-    
-    def distribute(self) -> None:
-        pass
-    
-    def get_total_supply(self) -> float:
-        pass
-    
-    def get_total_demand(self) -> float:
-        pass
-    
-    def get_total_consumption(self) -> float:
-        pass
-
