@@ -305,7 +305,7 @@ class HospitalSystem(BuiltEnvironmentSystem):
             component.update_patient_status(self.time_step)
     
     def update_resilience_calculators(self) -> None:
-        # TODO: Refactor - input for all resilience calculators should be the same! Liskov principle
+        # TODO: Refactor - input for all resilience calculators should be the same!
         for resilience_calculator in self.resilience_calculators:
             if isinstance(resilience_calculator, ResilienceCalculator.PatientFlowCalculator) or isinstance(resilience_calculator, ResilienceCalculator.DeadPatientsCalculator) or isinstance(resilience_calculator, ResilienceCalculator.HospitalMeasureOfServiceCalculator):
                 resilience_calculator.update(self.components)
