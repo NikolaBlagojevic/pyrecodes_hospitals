@@ -277,9 +277,6 @@ def generate_patient_arrival_dynamic_plots(system, doc, plot_folder='./plots/'):
             plt.savefig(f'{plot_folder}PatientArrival_{patient_type.replace(" ", "_")}.png')
             doc.add_picture(f'{plot_folder}PatientArrival_{patient_type.replace(" ", "_")}.png', width=docx.shared.Cm(12))
             plt.close()
-        # elif time_steps == [0]:
-        #     existing_patients_considered = True
-        #     existing_patients_string += f' {patient_arrival[0]} {patient_type}s, '
 
     if existing_patients_considered:        
         doc.add_paragraph(existing_patients_string[:-2] + '.')
