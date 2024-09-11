@@ -404,24 +404,83 @@ class TestHospitalComponent():
         assert all([patient.name == 'ExamplePatient Else' for patient in prioritized_patients[:5]])
         assert all([patient.name == 'ExamplePatient Green' for patient in prioritized_patients[5:10]])
 
-    def test_distribute_resource_among_patients_evenly(self):
+    def test_categorize_patients(self):
+        component = Component.HospitalComponent()
+        component.form('ExampleComponent', self.COMPONENT_PARAMETERS)
+        patient = Patient.PatientType()
+        patient.set_parameters('ExamplePatient Red', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(10)]
+        patient = Patient.PatientType()
+        patient.set_parameters('ExamplePatient Yellow', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(2)]
+        patient = Patient.PatientType()
+        patient.set_parameters('ExamplePatient Green', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(3)]
+        patient = Patient.PatientType()
+        patient.set_parameters('ExamplePatient Else', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(7)]
+
+        categorized_patients = component.categorize_patients(component.patients)
+        assert len(categorized_patients['Red']) == 10
+        assert len(categorized_patients['Yellow']) == 2
+        assert len(categorized_patients['Green']) == 3
+        assert len(categorized_patients['Rest']) == 7
+
+        component.PRIORITIZED_PATIENTS_LIST = ['Red', 'Rest']
+        categorized_patients = component.categorize_patients(component.patients)
+        assert len(categorized_patients['Red']) == 10
+        assert len(categorized_patients['Rest']) == 12
+
+    def test_distribute_resource_among_patients_evenly_within_the_same_patient_profile_single_patient_profile(self):
         component = Component.HospitalComponent()
         component.form('ExampleComponent', self.COMPONENT_PARAMETERS)
         patient = Patient.PatientType()
         patient.set_parameters('ExamplePatient', self.PATIENT_PARAMETERS_SIMPLE)
         component.patients += [copy.deepcopy(patient) for _ in range(10)]
-        patients_with_demand = component.get_patients_with_demand('Resource_2')
-        component.distribute_resource_among_patients_evenly('Resource_2', 1.0, patients_with_demand)
+        component.update(0, {'Resource_1': [0]})
+        patients_with_demand = component.get_patients_with_demand('Resource_1')
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 1.0, patients_with_demand)
         for patient in patients_with_demand:
-            assert patient.demand_met[0]['Resource_2'] == 1.0
+            assert patient.demand_met[0]['Resource_1'] == 1.0
         
-        component.distribute_resource_among_patients_evenly('Resource_2', 0.5, patients_with_demand)
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 0.5, patients_with_demand)
         for patient in patients_with_demand:
-            assert patient.demand_met[0]['Resource_2'] == 0.5
+            assert patient.demand_met[0]['Resource_1'] == 0.5
         
-        component.distribute_resource_among_patients_evenly('Resource_2', 0.0, patients_with_demand)
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 0.0, patients_with_demand)
         for patient in patients_with_demand:
-            assert patient.demand_met[0]['Resource_2'] == 0.0     
+            assert patient.demand_met[0]['Resource_1'] == 0.0   
+
+    def test_distribute_resource_among_patients_evenly_within_the_same_patient_profile_multiple_patient_profile(self):
+        component = Component.HospitalComponent()
+        component.form('ExampleComponent', self.COMPONENT_PARAMETERS)
+        patient = Patient.PatientType()
+        patient.set_parameters('ExamplePatient Red', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(10)]
+        patient.set_parameters('ExamplePatient Yellow', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(20)]
+        patient.set_parameters('ExamplePatient Green', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(5)]
+        patient.set_parameters('ExamplePatient Inpatient', self.PATIENT_PARAMETERS_SIMPLE)
+        component.patients += [copy.deepcopy(patient) for _ in range(10)]
+        component.update(0, {'Resource_1': [0]})
+        patients_with_demand = component.get_patients_with_demand('Resource_1')
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 1.0, patients_with_demand)
+        for patient in patients_with_demand:
+            assert patient.demand_met[0]['Resource_1'] == 1.0
+        
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 0.5, patients_with_demand)
+        for patient in patients_with_demand:
+            if patient.name == 'ExamplePatient Red':
+                assert patient.demand_met[0]['Resource_1'] == 1.0
+            elif patient.name == 'ExamplePatient Yellow':
+                assert patient.demand_met[0]['Resource_1'] == 0.625
+            else:
+                assert patient.demand_met[0]['Resource_1'] == 0
+        
+        component.distribute_resource_among_patients_evenly_within_the_same_patient_profile('Resource_1', 0.0, patients_with_demand)
+        for patient in patients_with_demand:
+            assert patient.demand_met[0]['Resource_1'] == 0.0 
     
     def test_get_patients_with_demand(self):
         component = Component.HospitalComponent()

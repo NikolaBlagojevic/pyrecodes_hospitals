@@ -85,7 +85,7 @@ class TestMain():
         assert component_library['Pharmacy']['Supply']['MCI_Kit_NonWalking_EmergencyDepartment']['Amount'] == 100
         assert component_library['Pharmacy']['Supply']['MCI_Kit_NonWalking_OperatingTheater']['Amount'] == 100
         assert component_library['Pharmacy']['Supply']['MCI_Kit_NonWalking_HighDependencyUnit']['Amount'] == 100
-        assert component_library['Pharmacy']['Supply']['MCI_Kit_Walking_EmergencyDepartment']['Amount'] == 100
+        assert component_library['Pharmacy']['Supply']['MCI_Kit_Walking_RestOfHospital']['Amount'] == 100
         assert component_library['Pharmacy']['Supply']['MedicalDrugs']['Amount'] == 24
 
         assert component_library['OperatingTheater']['Supply']['OperatingTheater_Bed']['Amount'] == 5
@@ -428,6 +428,132 @@ class TestMain():
         assert stress_scenario_dict['ComponentsToChange'][10]['ResourcesToChange'][0]['Resource'] == 'RestOfHospital_Bed'
         assert stress_scenario_dict['ComponentsToChange'][10]['ResourcesToChange'][0]['AtTimeStep'] == [0]
         assert stress_scenario_dict['ComponentsToChange'][10]['ResourcesToChange'][0]['Amount'] == [0]
+
+    def test_format_predefined_stress_scenario_patients(self):
+        MCI_SCENARIO_PARAMETERS = {'MCI_type': 'Example 1', 
+                                   'number_of_patients': 10,
+                                   'patient_arrival': {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]},
+                                   'investigated_period': 0.09
+                                   }
+        stress_scenario_dict = {'StressScenarioName': 'Example 1', 'ComponentsToChange': [{'ComponentName': 'PatientSource',
+                                                               'ResourcesToChange': []}]}
+        main.format_predefined_stress_scenario_patients(MCI_SCENARIO_PARAMETERS, stress_scenario_dict)
+        assert stress_scenario_dict == {'StressScenarioName': 'Example 1',
+                                        'ComponentsToChange': [{'ComponentName': 'PatientSource',
+                                                               'ResourcesToChange': [{'Resource': 'Red',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1],
+                                                                                      'Amount': [1, 2]},
+                                                                                     {'Resource': 'Yellow',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1],
+                                                                                      'Amount': [2, 1]},
+                                                                                     {'Resource': 'Green',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1],
+                                                                                      'Amount': [2, 2]}]}]}
+        MCI_SCENARIO_PARAMETERS = {'MCI_type': 'Example 1', 
+                                   'number_of_patients': 103,
+                                   'patient_arrival': {'Red': [0.01, 0.05, 0.04], 'Yellow': [0.2, 0.1], 'Green': [0.4, 0.2]},
+                                   'investigated_period': 0.125
+                                   }
+        stress_scenario_dict = {'StressScenarioName': 'Example 1', 'ComponentsToChange': [{'ComponentName': 'PatientSource',
+                                                               'ResourcesToChange': []}]}
+        main.format_predefined_stress_scenario_patients(MCI_SCENARIO_PARAMETERS, stress_scenario_dict)
+        assert stress_scenario_dict == {'StressScenarioName': 'Example 1',
+                                        'ComponentsToChange': [{'ComponentName': 'PatientSource',
+                                                               'ResourcesToChange': [{'Resource': 'Red',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1, 2],
+                                                                                      'Amount': [1, 5, 4]},
+                                                                                     {'Resource': 'Yellow',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1, 2],
+                                                                                      'Amount': [21, 10, 0]},
+                                                                                     {'Resource': 'Green',
+                                                                                      "SupplyOrDemand": "demand",
+                                                                                      "SupplyOrDemandType": "OperationDemand",
+                                                                                      'AtTimeStep': [0, 1, 2],
+                                                                                      'Amount': [41, 21, 0]}]}]}
+        
+
+    def test_distribute_patients(self):
+        total_patients = 10
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [1, 2], 'Yellow': [2, 1], 'Green': [2, 2]}
+
+        total_patients = 11
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [1, 2], 'Yellow': [2, 1], 'Green': [2, 3]}
+
+        total_patients = 12
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [1, 2], 'Yellow': [3, 1], 'Green': [2, 3]}
+
+        total_patients = 100
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [10, 20], 'Yellow': [20, 10], 'Green': [20, 20]}
+
+        total_patients = 101
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [10, 20], 'Yellow': [20, 10], 'Green': [20, 21]}
+
+        total_patients = 102
+        patient_arrival = {'Red': [0.1, 0.2], 'Yellow': [0.2, 0.1], 'Green': [0.2, 0.2]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [10, 20], 'Yellow': [21, 10], 'Green': [20, 21]}
+
+        total_patients = 105
+        patient_arrival = {'Red': [0.01, 0.09], 'Yellow': [0.2, 0.1], 'Green': [0.5, 0.1]}
+        distribution = main.distribute_patients(total_patients, patient_arrival)
+        assert distribution == {'Red': [1, 9], 'Yellow': [21, 11], 'Green': [52, 11]}
+
+    def test_distribute_remainders(self):
+        total_patients = 11
+        distribution = [0, 5, 5]
+        ratios = [0, 0.5, 0.5]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [0, 6, 5] or distribution == [0, 5, 6]
+
+        total_patients = 13
+        distribution = [0, 5, 7]
+        ratios = [0, 0.4, 0.6]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [0, 5, 8]
+
+        total_patients = 11
+        distribution = [2, 3, 5]
+        ratios = [0.2, 0.3, 0.5]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [2, 3, 6]
+
+        total_patients = 100
+        distribution = [10, 20, 30, 35, 5]
+        ratios = [0.1, 0.2, 0.3, 0.35, 0.05]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [10, 20, 30, 35, 5]
+
+        total_patients = 101
+        distribution = [10, 20, 30, 35, 5]
+        ratios = [0.1, 0.2, 0.3, 0.35, 0.05]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [10, 20, 30, 36, 5]
+
+        total_patients = 102
+        distribution = [10, 20, 30, 35, 5]
+        ratios = [0.1, 0.2, 0.3, 0.35, 0.05]
+        distribution = main.distribute_remainders(total_patients, distribution, ratios)
+        assert distribution == [10, 20, 31, 36, 5]
 
     def test_format_patient_library_file(self):
         excel_input = main.read_excel_input(self.EXCEL_INPUT_1)

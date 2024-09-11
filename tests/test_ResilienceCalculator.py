@@ -1,6 +1,7 @@
 
 from pyrecodes_hospitals import main
 from pyrecodes_hospitals import ResilienceCalculator
+from pyrecodes_hospitals import Patient
 import math
 import random
 
@@ -83,23 +84,23 @@ class TestReCoDeSResilienceCalculator():
         assert math.isclose(resilience_calculator.system_demand['Nurse'][2], 76.5)
         assert resilience_calculator.system_demand['Oxygen'] == [0, 720, 1440]
         assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 1, 1]
-        assert resilience_calculator.system_demand['Blood'] == [0, 3, 5]
+        assert resilience_calculator.system_demand['Blood'] == [0, 3, 7]
         assert math.isclose(resilience_calculator.system_consumption['Nurse'][2], 76.5)
         assert resilience_calculator.system_consumption['Oxygen'] == [0, 720, 1000]
         assert resilience_calculator.system_consumption['EmergencyDepartment_Bed'] == [0, 1, 1]
-        assert resilience_calculator.system_consumption['Blood'] == [0, 3, 5]
+        assert resilience_calculator.system_consumption['Blood'] == [0, 3, 7]
 
         system = run_system_time_step(system, 3)
         resilience_calculator.update(system.resources)
-        assert resilience_calculator.system_supply == {'Nurse': [200, 200, 200, 200], 'Oxygen': [1100, 1100, 1000, 1000], 'EmergencyDepartment_Bed': [20, 40, 40, 40], 'Blood': [500, 500, 497, 492]}
+        assert resilience_calculator.system_supply == {'Nurse': [200, 200, 200, 200], 'Oxygen': [1100, 1100, 1000, 1000], 'EmergencyDepartment_Bed': [20, 40, 40, 40], 'Blood': [500, 500, 497, 490]}
         assert math.isclose(resilience_calculator.system_demand['Nurse'][3], 76.5)
         assert resilience_calculator.system_demand['Oxygen'] == [0, 720, 1440, 1440]
         assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 1, 1, 1]
-        assert resilience_calculator.system_demand['Blood'] == [0, 3, 5, 5]   
+        assert resilience_calculator.system_demand['Blood'] == [0, 3, 7, 7]   
         assert math.isclose(resilience_calculator.system_consumption['Nurse'][3], 76.5)
         assert resilience_calculator.system_consumption['Oxygen'] == [0, 720, 1000, 1000]
         assert resilience_calculator.system_consumption['EmergencyDepartment_Bed'] == [0, 1, 1, 1]
-        assert resilience_calculator.system_consumption['Blood'] == [0, 3, 5, 5]
+        assert resilience_calculator.system_consumption['Blood'] == [0, 3, 7, 7]
 
         system = initiate_system(EXCEL_INPUT_2, ADDITIONAL_DATA_LOCATION)
         system.set_initial_damage()
@@ -113,11 +114,11 @@ class TestReCoDeSResilienceCalculator():
         system = run_system_time_step(system, 1)
         resilience_calculator.update(system.resources)
         assert resilience_calculator.system_supply == {'Nurse': [50, 50], 'Oxygen': [0, 0], 'EmergencyDepartment_Bed': [0, 0], 'Blood': [0, 0]}     
-        assert math.isclose(resilience_calculator.system_demand['Nurse'][1], 3 + 2*3 + 22*0.05 + 6 + 10 + 10 + 10)        
+        assert math.isclose(resilience_calculator.system_demand['Nurse'][1], 3 + 2*3 + 10 + 6 + 10 + 10 )        
         assert resilience_calculator.system_demand['Oxygen'] == [0, 3360]
         assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 3]
         assert resilience_calculator.system_demand['Blood'] == [0, 9]
-        assert math.isclose(resilience_calculator.system_consumption['Nurse'][1],  3 + 2*3 + 22*0.05 + 6 + 10 + 10 + 10)
+        assert math.isclose(resilience_calculator.system_consumption['Nurse'][1],  3 + 2*3 + 6 + 10 + 10 + 10)
         assert resilience_calculator.system_consumption['Oxygen'] == [0, 0]
         assert resilience_calculator.system_consumption['EmergencyDepartment_Bed'] == [0, 0]
         assert resilience_calculator.system_consumption['Blood'] == [0, 0]
@@ -125,11 +126,11 @@ class TestReCoDeSResilienceCalculator():
         system = run_system_time_step(system, 2)
         resilience_calculator.update(system.resources)
         assert resilience_calculator.system_supply == {'Nurse': [50, 50, 50], 'Oxygen': [0, 0, 0], 'EmergencyDepartment_Bed': [0, 0, 0], 'Blood': [0, 0, 0]}
-        assert math.isclose(resilience_calculator.system_demand['Nurse'][2], 2*3+3+3+6*0.05 + 6 + 10 + 10 + 10)
-        assert resilience_calculator.system_demand['Oxygen'] == [0, 3360, 5*240 + 720+2*720+720]
-        assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 3, 4]
-        assert resilience_calculator.system_demand['Blood'] == [0, 9, 3+3+2*3]
-        assert math.isclose(resilience_calculator.system_consumption['Nurse'][2], 2*3+3+3+6*0.05 + 6 + 10 + 10 + 10)
+        assert math.isclose(resilience_calculator.system_demand['Nurse'][2], 3 + 3 + 6 + 10 + 10 + 10)
+        assert resilience_calculator.system_demand['Oxygen'] == [0, 3360, 5*240 + 720+720]
+        assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 3, 2]
+        assert resilience_calculator.system_demand['Blood'] == [0, 9, 3+3]
+        assert math.isclose(resilience_calculator.system_consumption['Nurse'][2], 3+3 + 6 + 10 + 10 + 10)
         assert resilience_calculator.system_consumption['Oxygen'] == [0, 0, 0]
         assert resilience_calculator.system_consumption['EmergencyDepartment_Bed'] == [0, 0, 0]
         assert resilience_calculator.system_consumption['Blood'] == [0, 0, 0]
@@ -137,11 +138,11 @@ class TestReCoDeSResilienceCalculator():
         system = run_system_time_step(system, 3)
         resilience_calculator.update(system.resources)
         assert resilience_calculator.system_supply == {'Nurse': [50, 50, 50, 50], 'Oxygen': [0, 0, 0, 0], 'EmergencyDepartment_Bed': [0, 0, 0, 0], 'Blood': [0, 0, 0, 0]}
-        assert math.isclose(resilience_calculator.system_demand['Nurse'][3], 6*0.05+3+3+3 + 6 + 10 + 10 + 10)
-        assert resilience_calculator.system_demand['Oxygen'] == [0, 3360,  5*240 + 720+2*720+720, 720+720+5*240+720]
-        assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 3, 4, 3]
-        assert resilience_calculator.system_demand['Blood'] == [0, 9, 3+3+2*3, 3+3+3]   
-        assert math.isclose(resilience_calculator.system_consumption['Nurse'][3], 6*0.05+3+3+3 + 6 + 10 + 10 + 10)
+        assert math.isclose(resilience_calculator.system_demand['Nurse'][3], 3 + 3 + 6 + 10 + 10 + 10)
+        assert resilience_calculator.system_demand['Oxygen'] == [0, 3360,  5*240 + 720+720, 5*240+720+720]
+        assert resilience_calculator.system_demand['EmergencyDepartment_Bed'] == [0, 3, 2, 2]
+        assert resilience_calculator.system_demand['Blood'] == [0, 9, 3+3, 3+3]   
+        assert math.isclose(resilience_calculator.system_consumption['Nurse'][3], 3+3 + 6 + 10 + 10 + 10)
         assert resilience_calculator.system_consumption['Oxygen'] == [0, 0, 0, 0]
         assert resilience_calculator.system_consumption['EmergencyDepartment_Bed'] == [0, 0, 0, 0]
         assert resilience_calculator.system_consumption['Blood'] == [0, 0, 0, 0]
@@ -267,6 +268,16 @@ class TestHospitalMeasuresOfServiceCalculator:
                 ]
             }
     
+    PARAMETERS_ROH = {
+                "Scope": ["RestOfHospital"],
+                "Resources": [
+                    "Red",
+                    "Green",
+                    "Yellow",
+                    "Blue"
+                ]
+            }
+    
     PARAMETERS_OT = {
                 "Scope": ["OperatingTheater"],
                 "Resources": [
@@ -298,6 +309,13 @@ class TestHospitalMeasuresOfServiceCalculator:
                 ]
             }
     
+    PARAMETERS_ED_RED = {
+                "Scope": ["EmergencyDepartment"],
+                "Resources": [
+                    "Red"
+                ]
+            }
+    
     def test_init(self):
         resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS)
         assert resilience_calculator.measures_of_service == {}
@@ -322,30 +340,36 @@ class TestHospitalMeasuresOfServiceCalculator:
         resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
         resilience_calculator_RED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_RED)
         resilience_calculator_ED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ED)
+        resilience_calculator_ROH = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ROH)
         resilience_calculator_OT_Yellow = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_OT_YELLOW)
         system = run_system_time_step(system, 0)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 0
         assert len(resilience_calculator_RED.collect_all_patients(system.components)) == 0
         assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 0
+        assert len(resilience_calculator_ROH.collect_all_patients(system.components)) == 0
         assert len(resilience_calculator_OT_Yellow.collect_all_patients(system.components)) == 0
         system = run_system_time_step(system, 1)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 30
         assert len(resilience_calculator_RED.collect_all_patients(system.components)) == 1
-        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 25
+        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 3
+        assert len(resilience_calculator_ROH.collect_all_patients(system.components)) == 22
         assert len(resilience_calculator_OT_Yellow.collect_all_patients(system.components)) == 0
         system = run_system_time_step(system, 2)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 38
         assert len(resilience_calculator_RED.collect_all_patients(system.components)) == 2
-        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 33
+        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 5
+        assert len(resilience_calculator_ROH.collect_all_patients(system.components)) == 28
         assert len(resilience_calculator_OT_Yellow.collect_all_patients(system.components)) == 2
         system = run_system_time_step(system, 3)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 46
         assert len(resilience_calculator_RED.collect_all_patients(system.components)) == 3
-        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 41
+        assert len(resilience_calculator_ED.collect_all_patients(system.components)) == 7
+        assert len(resilience_calculator_ROH.collect_all_patients(system.components)) == 34
         assert len(resilience_calculator_OT_Yellow.collect_all_patients(system.components)) == 3
         assert len(resilience_calculator.collect_all_patients(system.components, time_interval=[0, 2])) == 36
         assert len(resilience_calculator_RED.collect_all_patients(system.components, time_interval=[0, 2])) == 1
-        assert len(resilience_calculator_ED.collect_all_patients(system.components, time_interval=[0, 2])) == 36
+        assert len(resilience_calculator_ED.collect_all_patients(system.components, time_interval=[0, 2])) == 2
+        assert len(resilience_calculator_ROH.collect_all_patients(system.components, time_interval=[0, 2])) == 34
         system = run_system_time_step(system, 4)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 54
         assert len(resilience_calculator_RED.collect_all_patients(system.components)) == 4
@@ -362,12 +386,12 @@ class TestHospitalMeasuresOfServiceCalculator:
         system = run_system_time_step(system, 0)
         assert len(resilience_calculator.collect_all_patients(system.components)) == 0
         system = run_system_time_step(system, 1)
-        assert len(resilience_calculator.collect_all_patients(system.components)) == 25
+        assert len(resilience_calculator.collect_all_patients(system.components)) == 3
         system = run_system_time_step(system, 2)
         assert len(resilience_calculator.collect_all_patients(system.components, time_interval=[2, 3])) == 3
-        assert len(resilience_calculator.collect_all_patients(system.components, time_interval=[0, 3])) == 33
+        assert len(resilience_calculator.collect_all_patients(system.components, time_interval=[0, 3])) == 5
         system = run_system_time_step(system, 3)
-        assert len(resilience_calculator.collect_all_patients(system.components)) == 41
+        assert len(resilience_calculator.collect_all_patients(system.components)) == 7
         system = run_system_time_step(system, 4)
         assert len(resilience_calculator.collect_all_patients(system.components, time_interval=[0, 1])) == 0
     
@@ -503,12 +527,14 @@ class TestHospitalMeasuresOfServiceCalculator:
         resilience_calculator_ED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ED)
         resilience_calculator_OT = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_OT)
         resilience_calculator_OT_YELLOW = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_OT_YELLOW)
+        resilience_calculator_ROH = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ROH)
         resilience_calculator.update(system.components)
         for time_step in range(0, 2):
             system = run_system_time_step(system, time_step)
         assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), 0.00566, rel_tol=0.05)
         assert math.isclose(resilience_calculator_RED.calculate_baseline_mortality_rate(system.components), 0.05)
-        assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), 0.006)
+        assert math.isclose(resilience_calculator_ROH.calculate_baseline_mortality_rate(system.components), 0.0)
+        assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), 0.05)
         assert math.isclose(resilience_calculator_OT.calculate_baseline_mortality_rate(system.components), 0)
         assert math.isclose(resilience_calculator_OT_YELLOW.calculate_baseline_mortality_rate(system.components), 0)
 
@@ -516,9 +542,101 @@ class TestHospitalMeasuresOfServiceCalculator:
             system = run_system_time_step(system, time_step)
         assert math.isclose(resilience_calculator.calculate_baseline_mortality_rate(system.components), (4*0.05+0.0566*5)/54, rel_tol=0.05)
         assert math.isclose(resilience_calculator_RED.calculate_baseline_mortality_rate(system.components), 0.05)
-        assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), (4*0.05+5*0.05)/49)
+        assert math.isclose(resilience_calculator_ED.calculate_baseline_mortality_rate(system.components), (4*0.05+5*0.05)/9)
         assert math.isclose(resilience_calculator_OT.calculate_baseline_mortality_rate(system.components), 0)
         assert math.isclose(resilience_calculator_OT_YELLOW.calculate_baseline_mortality_rate(system.components), 0)
+
+    def test_calculate_mortality_rate_based_on_recorded_data(self):
+        system = initiate_system(EXCEL_INPUT_4, ADDITIONAL_DATA_LOCATION)
+        resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
+
+        system.set_initial_damage()
+        system = run_system_time_step(system, 0)
+        system = run_system_time_step(system, 1)
+        zero_mortality_record = [0.0]
+        for patient in system.components[1].patients:
+            patient.mortality_rate_record = zero_mortality_record
+        
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, math.inf]) == 0.0
+
+        system.components[1].patients[0].mortality_rate_record = [1.0]
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, math.inf]) == 1/30
+
+        system.components[1].patients[1].mortality_rate_record = [1.0]
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, math.inf]) == 2/30
+
+        system.components[1].patients[0].mortality_rate_record = [1.0, 0.0, 0.0, 0.0]
+        system.components[1].patients[0].flow[0]['TimeStepAtDepartment'] = [1, 2, 3, 4]
+        system.components[1].patients[1].mortality_rate_record = [0.0]
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, math.inf]) == 1/30
+
+        system.components[1].patients[0].mortality_rate_record = [0.0, 0.0, 0.0, 1.0]
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, 3]) == 0.0
+        assert resilience_calculator.calculate_mortality_rate_based_on_recorded_data(system.components, time_interval=[0, 4]) == 1/30
+
+    def test_calculate_baseline_mortality_rates_for_empty_departments(self):
+        system = initiate_system(EXCEL_INPUT_4, ADDITIONAL_DATA_LOCATION)
+        system.set_initial_damage()
+        resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
+        resilience_calculator_RED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_RED)
+        resilience_calculator_ED_RED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ED_RED)
+        resilience_calculator_ED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ED)
+        resilience_calculator_OT = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_OT)
+        resilience_calculator_OT_YELLOW = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_OT_YELLOW)
+        resilience_calculator_ROH = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ROH)
+        resilience_calculator.update(system.components)
+        assert resilience_calculator.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+        assert resilience_calculator_RED.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+        assert resilience_calculator_ED.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+        assert math.isclose(resilience_calculator_ED_RED.calculate_baseline_mortality_rates_for_empty_departments(system.components), 0.05)
+        assert resilience_calculator_OT.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+        assert resilience_calculator_OT_YELLOW.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+        assert resilience_calculator_ROH.calculate_baseline_mortality_rates_for_empty_departments(system.components) == 0.0
+
+    def test_get_mortality_rates_record(self):
+        system = initiate_system(EXCEL_INPUT_4, ADDITIONAL_DATA_LOCATION)
+        system.set_initial_damage()
+        resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
+        for time_step in range(0, 10):
+            system = run_system_time_step(system, time_step)
+        
+        assert resilience_calculator.get_mortality_rates_record(system.components[3].patients[0], [0, 10]) == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        assert resilience_calculator.get_mortality_rates_record(system.components[3].patients[0], [0, 2]) == [0.0, 0.0]
+        assert resilience_calculator.get_mortality_rates_record(system.components[4].patients[0], [0, 10]) == [0.05, 0.0, 0.0, 0.0008410823047560081, 0.0008410823047560081, 0.0008410823047560081, 0.0008410823047560081, 0.0008410823047560081, 0.0008410823047560081]
+        assert resilience_calculator.get_mortality_rates_record(system.components[1].patients[0], [0, 10]) == [0.05]
+        assert resilience_calculator.get_mortality_rates_record(system.components[1].patients[1], [0, 10]) == [0.05]
+        assert resilience_calculator.get_mortality_rates_record(system.components[1].patients[1], [0, 1]) == [0.05]
+        assert resilience_calculator.get_mortality_rates_record(system.components[2].patients[0], [0, 10]) == [0.05, 0.0, 0.0]
+        assert resilience_calculator.get_mortality_rates_record(system.components[2].patients[1], [0, 10]) == [0.05, 0.0, 0.0]
+
+    def test_get_mortality_rate_during_entire_length_of_stay(self):
+        resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
+        mortality_rates = [0.05, 0.05, 0.05, 0.05, 1.0]
+        assert resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates) == 1.0
+        mortality_rates = [0.05, 0.05, 0.05, 0.05, 0.05]
+        assert math.isclose(resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates), 0.22622, rel_tol=0.01)
+        mortality_rates = [1.0, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
+        assert resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates) == 1.0
+        mortality_rates = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        assert resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates) == 0.0
+        mortality_rates = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        assert resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates) == 1.0
+        mortality_rates = [0.01, 0.0001, 0.00001, 0.000001, 0.0, 0.0, 0.0]
+        assert math.isclose(resilience_calculator.get_mortality_rate_during_entire_length_of_stay(mortality_rates), 0.01011, rel_tol=0.01)
+        
+    def test_get_mortality_rates_per_time_step_during_entire_length_of_stay(self):
+        system = initiate_system(EXCEL_INPUT_4, ADDITIONAL_DATA_LOCATION)
+        system.set_initial_damage()
+        resilience_calculator = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ALL_PATIENTS)
+        resilience_calculator_ED = ResilienceCalculator.HospitalMeasureOfServiceCalculator(self.PARAMETERS_ED)
+        
+        for time_step in range(0, 2):
+            system = run_system_time_step(system, time_step)
+
+        assert resilience_calculator.get_mortality_rates_per_time_step_during_entire_length_of_stay(system.components[1].patients[0]) == [0.05]
+        assert resilience_calculator_ED.get_mortality_rates_per_time_step_during_entire_length_of_stay(system.components[1].patients[0]) == [0.05]
+        assert resilience_calculator.get_mortality_rates_per_time_step_during_entire_length_of_stay(system.components[1].patients[1]) == [0.05] + [0.0008410823047560081 for _ in range(12)]
+        assert resilience_calculator_ED.get_mortality_rates_per_time_step_during_entire_length_of_stay(system.components[1].patients[1]) == [0.05]
 
     def test_calculate_resilience(self):
         random.seed(0)
@@ -530,7 +648,11 @@ class TestHospitalMeasuresOfServiceCalculator:
         resilience_calculator.update(system.components)
         for time_step in range(0, 20):
             system = run_system_time_step(system, time_step)
-        assert resilience_calculator.calculate_resilience() == {'MortalityRateBefore24H': 0.05, 'MortalityRateAfter24H': 0.05, 'AverageLengthOfStay': 145/10, 'SurgeriesPerformed': 10, 'SurgeriesCancelled': 0}
+        assert math.isclose(resilience_calculator.calculate_resilience()['MortalityRateBefore24H'], 0.05)
+        assert math.isclose(resilience_calculator.calculate_resilience()['MortalityRateAfter24H'], 0.05)
+        assert math.isclose(resilience_calculator.calculate_resilience()['AverageLengthOfStay'], 145/10)
+        assert resilience_calculator.calculate_resilience()['SurgeriesPerformed'] == 10
+        assert resilience_calculator.calculate_resilience()['SurgeriesCancelled'] == 0
 
         system = initiate_system(EXCEL_INPUT_4, ADDITIONAL_DATA_LOCATION)
         system.set_initial_damage()
@@ -545,7 +667,7 @@ class TestHospitalMeasuresOfServiceCalculator:
         for time_step in range(4):
             system = run_system_time_step(system, time_step)
         measures_of_service = resilience_calculator.calculate_resilience()
-        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 3/46)
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 3.2/46)
         assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.0083911, rel_tol=0.05)
         assert math.isclose(measures_of_service['SurgeriesPerformed'], 1)
         assert math.isclose(measures_of_service['SurgeriesCancelled'], 1)
@@ -566,7 +688,7 @@ class TestHospitalMeasuresOfServiceCalculator:
             system = run_system_time_step(system, time_step)
         
         measures_of_service = resilience_calculator.calculate_resilience()
-        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 5/62)
+        assert math.isclose(measures_of_service['MortalityRateBefore24H'], 5.3/62)
         assert math.isclose(measures_of_service['MortalityRateAfter24H'], 0.00974, rel_tol=0.05)
         assert math.isclose(measures_of_service['SurgeriesPerformed'], 3)
         assert math.isclose(measures_of_service['SurgeriesCancelled'], 4)

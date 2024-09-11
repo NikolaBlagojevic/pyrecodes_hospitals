@@ -14,7 +14,7 @@
     [["Number of non-walking patients that can be treated using the medical supplies in the MCI contigency stock at:", "Emergency Department"], ["Pharmacy", "Supply", "MCI_Kit_NonWalking_EmergencyDepartment", "Amount"]],
     [["Number of non-walking patients that can be treated using the medical supplies in the MCI contigency stock at:", "Operating Theater"], ["Pharmacy", "Supply", "MCI_Kit_NonWalking_OperatingTheater", "Amount"]],
     [["Number of non-walking patients that can be treated using the medical supplies in the MCI contigency stock at:", "High Dependency Unit"], ["Pharmacy", "Supply", "MCI_Kit_NonWalking_HighDependencyUnit", "Amount"]],
-    [["Number of walking patients that can be treated using the medical supplies in the MCI contigency stock", "Entire Hospital"], ["Pharmacy", "Supply", "MCI_Kit_Walking_EmergencyDepartment", "Amount"]],
+    [["Number of walking patients that can be treated using the medical supplies in the MCI contigency stock", "Entire Hospital"], ["Pharmacy", "Supply", "MCI_Kit_Walking_RestOfHospital", "Amount"]],
     [["Hours of autonomy of the pharmacy in case of an MCI not considering the contigency stock", "Entire Hospital"], ["Pharmacy", "Supply", "MedicalDrugs", "Amount"]],
     [["Current stock of blood bags", "Entire Hospital"], ["BloodBank", "Supply", "Blood", "Amount"]],
     [["Number of equipped and staffed beds for resuscitation in ordinary times", "Emergency Department"], ["EmergencyDepartment", "Supply", "EmergencyDepartment_Bed", "Amount"]],

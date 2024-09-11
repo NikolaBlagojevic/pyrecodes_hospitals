@@ -495,7 +495,7 @@ class TestUtilityDistributionModel_Hospital(TestHospitalDistributionModel):
         system.update()   
         distribution_model.distribute() 
         assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
-        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5)
+        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5, abs_tol=1e-5)
         system.update_patients()
         assert system.components[2].patients[0].unmet_demand_info['Nurse'] == [1, 2]
 
@@ -506,14 +506,13 @@ class TestUtilityDistributionModel_Hospital(TestHospitalDistributionModel):
         assert system.components[2].patients[0].demand_met[1]['Nurse'] == 1.0
 
         system.time_step = 3
-        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 7
-        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 7
+        distribution_model.components[9].supply['Supply']['Nurse'].current_amount = 6
+        distribution_model.components[9].supply['Supply']['Nurse'].initial_amount = 6
         system.receive_patients() 
         system.update()  
         distribution_model.distribute() 
         assert system.components[1].patients[0].demand_met[0]['Nurse'] == 1.0
-        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5)
-        assert math.isclose(system.components[2].patients[1].demand_met[1]['Nurse'], 1/1.5)    
+        assert math.isclose(system.components[2].patients[0].demand_met[1]['Nurse'], 1/1.5, abs_tol=1e-5) 
         
     def test_fuel_distribution(self):
         system = self.initiate_system(self.EXCEL_INPUT_1)

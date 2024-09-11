@@ -1,4 +1,5 @@
 import random
+import math
 from pyrecodes_hospitals import Patient
 
 random.seed(1)
@@ -52,19 +53,19 @@ class TestPatientType():
         resource_demand = patient.get_resource_demand()
         assert resource_demand == {}
 
-    def test_update_stretcher_demand(self):
+    def test_update_consumable_demand(self):
         patient = Patient.PatientType()
         patient.set_parameters(self.PATIENT_NAME, self.PATIENT_PARAMETERS_SIMPLE)
-        patient.update_stretcher_demand()
+        patient.update_consumable_demand()
         assert patient.demand[0]['Stretcher'] == 1
         patient.flow[0]['TimeStepAtDepartment'] = [1]
-        patient.update_stretcher_demand()
+        patient.update_consumable_demand()
         assert patient.demand[0]['Stretcher'] == 0
         patient.flow.append({'Department': 'Department_2', 'TimeStepAtDepartment': [], 'TimeStepTreated': []})
-        patient.update_stretcher_demand()
+        patient.update_consumable_demand()
         assert patient.demand[1]['Stretcher'] == 1
         patient.flow[1]['TimeStepAtDepartment'] = [1]
-        patient.update_stretcher_demand()
+        patient.update_consumable_demand()
         assert patient.demand[1]['Stretcher'] == 0
 
     def test_get_current_department(self):
@@ -123,14 +124,14 @@ class TestPatientType():
         patient.demand_met[0]['Resource_1'] = 0.0
         patient.update(0)
         assert patient.flow[0]['TimeStepAtDepartment'] == [0]
-        assert patient.flow[0]['TimeStepTreated'] == []
-        assert patient.treated == False
+        assert patient.flow[0]['TimeStepTreated'] == [0]
+        assert patient.treated == True
         assert patient.mortality_rate == 1.2**10 * 0.01
 
         patient.demand_met[0]['Resource_3'] = 0.0
         patient.update(1)
         assert patient.flow[0]['TimeStepAtDepartment'] == [0, 1]
-        assert patient.flow[0]['TimeStepTreated'] == []
+        assert patient.flow[0]['TimeStepTreated'] == [0]
         assert patient.length_of_stay == 8 * 1.5
         assert patient.treated == False
         assert patient.mortality_rate == 0.01
@@ -138,7 +139,7 @@ class TestPatientType():
         patient.demand_met[0]['Resource_2'] = 0.0
         patient.update(2)
         assert patient.flow[0]['TimeStepAtDepartment'] == [0, 1, 2]
-        assert patient.flow[0]['TimeStepTreated'] == []
+        assert patient.flow[0]['TimeStepTreated'] == [0]
         assert patient.treated == False
         assert patient.alive == False
         assert patient.mortality_rate == 1.0
@@ -214,9 +215,9 @@ class TestPatientType():
         patient = Patient.PatientType()
         patient.set_parameters(self.PATIENT_NAME, self.PATIENT_PARAMETERS_SIMPLE)
         for time_step in range(0, 5):
-            patient.demand_met[0]['Resource_1'] = 0.0
+            patient.demand_met[0]['Resource_3'] = 0.0
             patient.update(time_step)
-        patient.demand_met[0]['Resource_1'] = 1.0
+        patient.demand_met[0]['Resource_3'] = 1.0
         for time_step in range(5, 20):
             patient.update(time_step)
         assert patient.flow[0]['TimeStepAtDepartment'] == list(range(0, 13))
@@ -264,12 +265,20 @@ class TestPatientType():
     def test_check_consequences_of_unmet_demand(self):
         patient = Patient.PatientType()
         patient.set_parameters(self.PATIENT_NAME, self.PATIENT_PARAMETERS_SIMPLE)
-        patient.set_current_baseline_mortality_rate()
+        patient.set_current_baseline_mortality_rate() 
+        patient.set_current_baseline_length_of_stay() 
         patient.demand_met[0]['Resource_1'] = 0.9 # 90% of demand met so that only 1 "nurse" is missing
         patient.check_consequences_of_unmet_demand(time_step=0)
         assert patient.unmet_demand_info['Resource_1'] == [0]
         assert patient.mortality_rate == 0.01 * 1.2
+        patient.demand_met[0]['Resource_1'] = 0.8 # 80% of demand met
+        patient.check_consequences_of_unmet_demand(time_step=0)
+        assert math.isclose(patient.mortality_rate, 0.01 * 1.2**2)
+        patient.demand_met[0]['Resource_1'] = 1.0 # 100% of demand met
+        patient.check_consequences_of_unmet_demand(time_step=0)
+        assert math.isclose(patient.mortality_rate, 0.01 * 1.2**2)
         patient.mortality_rate = 0.01
+        patient.unmet_demand_info['Resource_1'] = [0]
         patient.demand_met[0]['Resource_1'] = 0.1 # 10% of demand met so that 9 "nurses" are missing
         patient.check_consequences_of_unmet_demand(time_step=0)
         assert patient.unmet_demand_info['Resource_1'] == [0, 0]
@@ -297,6 +306,9 @@ class TestPatientType():
         assert patient.mortality_rate == 1.0
         patient.demand_met[1]['Resource_6'] = 0.8 # random value below 1
         patient.check_consequences_of_unmet_demand(time_step=0)
+        assert patient.length_of_stay == 8 * 1.5
+        patient.set_current_baseline_length_of_stay() 
+        patient.check_consequences_of_unmet_demand(time_step=0)
         assert patient.length_of_stay == 5 * 1.2  
         patient.lengths_of_stay[1] = 5
         patient.demand_met[1]['Resource_6'] = 0.2 # random value below 1
@@ -307,6 +319,7 @@ class TestPatientType():
         patient = Patient.PatientType()
         patient.set_parameters(self.PATIENT_NAME, self.PATIENT_PARAMETERS_SIMPLE)
         patient.set_current_baseline_mortality_rate()
+        patient.set_current_baseline_length_of_stay()
         patient.update_patient_status_when_demand_not_met('Resource_1', 0.5)
         assert patient.mortality_rate == 0.01 * (1.2**5)
         patient.mortality_rate = 0.01
@@ -333,6 +346,9 @@ class TestPatientType():
         patient.unmet_demand_info['Resource_5'] = [0, 1, 2]
         patient.update_patient_status_when_demand_not_met('Resource_5', 0.5)
         assert patient.mortality_rate == 1.0
+        patient.update_patient_status_when_demand_not_met('Resource_6', 0.5)
+        assert patient.length_of_stay == 8 * 1.5
+        patient.set_current_baseline_length_of_stay()
         patient.update_patient_status_when_demand_not_met('Resource_6', 0.5)
         assert patient.length_of_stay == 5 * 1.2**2.5
 
@@ -369,6 +385,18 @@ class TestPatientType():
         assert output == 8 * 1.2**5
         output = patient.update_patient_when_nurses_missing('Resource_1', 1.2, 0.9, patient.lengths_of_stay[0])
         assert output == 8 * 1.2
+
+        patient.demand = [{'Resource_1': 10, 'Stretcher': 1, 'Resource_2': 5, 'Resource_3': 0.25}, {'Stretcher': 1, 'Resource_4': 1, 'Resource_5': 5, 'Resource_6': 5}, {}]
+        output = patient.update_patient_when_nurses_missing('Resource_3', 0.9, 1.0, patient.lengths_of_stay[0])
+        assert output == 8
+        output = patient.update_patient_when_nurses_missing('Resource_3', 1.0, 0.5, patient.lengths_of_stay[0])
+        assert output == 8
+        output = patient.update_patient_when_nurses_missing('Resource_3', 1.2, 0.5, patient.lengths_of_stay[0])
+        assert math.isclose(output, 8 * 1.2**2)
+        output = patient.update_patient_when_nurses_missing('Resource_3', 1.2, 0.0, patient.lengths_of_stay[0])
+        assert math.isclose(output, 8 * 1.2**4)
+        output = patient.update_patient_when_nurses_missing('Resource_3', 1.2, 0.9, patient.lengths_of_stay[0])
+        assert math.isclose(output, 8 * 1.2**0.4)
     
     def test_patient_not_treated(self):
         patient = Patient.PatientType()
