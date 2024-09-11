@@ -9,8 +9,8 @@ import math
 
 BIG_NUMBER = 1000000
 DEPARTMENTS = ['All', 'EmergencyDepartment', 'OperatingTheater', 'Medical/SurgicalDepartment', 'HighDependencyUnit', 'RestOfHospital']
-RESOURCES_TO_PLOT = ['Nurse', 'Fuel', 'Water', 'Oxygen', 'MedicalDrugs', 'EmergencyDepartment_Bed', 'OperatingTheater_Bed', 'Medical/SurgicalDepartment_Bed', 'HighDependencyUnit_Bed', 'RestOfHospital_Bed', 'Stretcher', 'Blood', 'MCI_Kit_NonWalking_EmergencyDepartment', 'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit', 'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'MCI_Kit_Walking_EmergencyDepartment']
-ALL_RESOURCES = ['Nurse', 'ElectricPower', 'MCI_Kit_NonWalking_EmergencyDepartment', 'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit', 'MCI_Kit_Walking_EmergencyDepartment', 'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'Fuel', 'Water', 'Oxygen', 'MedicalDrugs', 'EmergencyDepartment_Bed', 'OperatingTheater_Bed', 'Medical/SurgicalDepartment_Bed', 'HighDependencyUnit_Bed', 'RestOfHospital_Bed', 'Stretcher', 'Blood']
+RESOURCES_TO_PLOT = ['Nurse', 'Fuel', 'Water', 'Oxygen', 'MedicalDrugs', 'EmergencyDepartment_Bed', 'OperatingTheater_Bed', 'Medical/SurgicalDepartment_Bed', 'HighDependencyUnit_Bed', 'RestOfHospital_Bed', 'Stretcher', 'Blood', 'MCI_Kit_NonWalking_EmergencyDepartment', 'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit', 'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'MCI_Kit_Walking_RestOfHospital']
+ALL_RESOURCES = ['Nurse', 'ElectricPower', 'MCI_Kit_NonWalking_EmergencyDepartment', 'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit', 'MCI_Kit_Walking_RestOfHospital', 'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'Fuel', 'Water', 'Oxygen', 'MedicalDrugs', 'EmergencyDepartment_Bed', 'OperatingTheater_Bed', 'Medical/SurgicalDepartment_Bed', 'HighDependencyUnit_Bed', 'RestOfHospital_Bed', 'Stretcher', 'Blood']
 RESOURCE_TO_COMPONENT_MAP = {"Water": "WaterSupplySystem", 
                              "Fuel": "FuelReservoir",
                              "Oxygen": "OxygenReservoir",
@@ -20,7 +20,7 @@ RESOURCE_TO_COMPONENT_MAP = {"Water": "WaterSupplySystem",
                              "MCI_Kit_NonWalking_OperatingTheater": "Pharmacy",
                              "MCI_Kit_NonWalking_HighDependencyUnit": "Pharmacy",
                              "MCI_Kit_NonWalking_Medical/SurgicalDepartment": "Pharmacy",
-                             "MCI_Kit_Walking_EmergencyDepartment": "Pharmacy",
+                             "MCI_Kit_Walking_RestOfHospital": "Pharmacy",
                              "OperatingTheater_Bed": "OperatingTheater",
                              "EmergencyDepartment_Bed": "EmergencyDepartment",
                              "HighDependencyUnit_Bed": "HighDependencyUnit",
@@ -117,12 +117,15 @@ def format_predefined_stress_scenario_patients(MCI_scenario_parameters: dict, st
     stress_scenario_dict['StressScenarioName'] = scenario_name
     total_number_of_patients = MCI_scenario_parameters['number_of_patients']
     patient_types = list(MCI_scenario_parameters['patient_arrival'].keys())
-    time_stepping = list(range(0, MCI_scenario_parameters['investigated_period'] * 24, 1))
+    time_stepping = list(range(0, int(MCI_scenario_parameters['investigated_period'] * 24), 1))
+
+    # Distribute patients while respecting the total number of patients
+    distribution_per_patient_type_per_time_step = distribute_patients(total_number_of_patients, MCI_scenario_parameters['patient_arrival'])
+    
     for patient_type in patient_types:
-        number_of_patients = []
-        for time_step in time_stepping:        
-            patient_ratio = get_element_from_list_with_default(MCI_scenario_parameters['patient_arrival'][patient_type], time_step, 0)
-            number_of_patients.append(int(total_number_of_patients * patient_ratio))
+        number_of_patients = [0 for _ in range(len(time_stepping))]
+        for time_step in range(len(MCI_scenario_parameters['patient_arrival'][patient_type])): 
+            number_of_patients[time_step] = distribution_per_patient_type_per_time_step[patient_type][time_step]
         patient_admission_dict = {'Resource': patient_type,
                                     "SupplyOrDemand": "demand",
                                     "SupplyOrDemandType": "OperationDemand",
@@ -130,11 +133,35 @@ def format_predefined_stress_scenario_patients(MCI_scenario_parameters: dict, st
                                     "Amount": number_of_patients}
         stress_scenario_dict['ComponentsToChange'][0]['ResourcesToChange'].append(patient_admission_dict)
 
-def get_element_from_list_with_default(lst, index, default):
-    try:
-        return lst[index]
-    except IndexError:
-        return default
+def distribute_patients(total_patients, patient_arrival: dict) -> list:
+
+    distribution_per_patient_type = {}
+    patient_type_ratios = {}
+    for patient_type, patient_arrival_ratios in patient_arrival.items():
+        patient_type_ratios[patient_type] = round(sum(patient_arrival_ratios), 2)
+        distribution_per_patient_type[patient_type] = int(total_patients * patient_type_ratios[patient_type])
+ 
+    distribution_per_patient_type_list = distribute_remainders(total_patients, list(distribution_per_patient_type.values()), list(patient_type_ratios.values()))
+    for key, value in zip(distribution_per_patient_type.keys(), distribution_per_patient_type_list):
+        distribution_per_patient_type[key] = value
+
+    distribution_per_patient_type_per_time_step = {}
+    for patient_type, patient_arrival in patient_arrival.items():  
+        normalized_patient_arrival_ratios = [arrival_ratio / sum(patient_arrival) for arrival_ratio in patient_arrival]
+        distribution_per_patient_type_per_time_step[patient_type] = [int(distribution_per_patient_type[patient_type] * arrival_ratio) for arrival_ratio in normalized_patient_arrival_ratios]
+        distribution_per_patient_type_per_time_step[patient_type] = distribute_remainders(distribution_per_patient_type[patient_type], distribution_per_patient_type_per_time_step[patient_type], normalized_patient_arrival_ratios)
+      
+    return distribution_per_patient_type_per_time_step
+
+def distribute_remainders(total_patients: int, distribution: list, ratios: list) -> list:
+    difference = total_patients - sum(distribution)
+    # Add the difference to the profile with the largest remainder
+    remainders = [total_patients * r - dist for r, dist in zip(ratios, distribution)]
+    indices = np.argsort(remainders)[::-1]  # Sort indices by remainder, descending
+    for i in range(difference):
+        distribution[indices[i]] += 1
+
+    return distribution
 
 def add_supply_increase(excel_input_data: dict, excel_to_dict_map: list, resource_name: str, stress_scenario_dict: dict) -> None:
     time_to_restock = get_value_from_excel_sheet_row_row(excel_input_data['ResourceSupply'], excel_to_dict_map[0][0])
@@ -232,13 +259,15 @@ def format_patient_library_file(excel_input_data: dict, input_dict: dict, additi
                     {"ResourceName": "Oxygen", "ResourceAmount": excel_input_data['PatientProfiles'].iloc[department_row_index+8, department_column_index+1],
                      "ConsequencesOfUnmetDemand": [{excel_input_data['PatientProfiles'].iloc[department_row_index+8, department_column_index+3]:
                                                     excel_input_data['PatientProfiles'].iloc[department_row_index+8, department_column_index+4]}]},
-                    {"ResourceName": f"MCI_Kit_{triage_category}_{department}", "ResourceAmount": modify_consumable_resource_demand(baseline_length_of_stay, excel_input_data['PatientProfiles'].iloc[department_row_index+9, department_column_index+1]),
+                    # {"ResourceName": f"MCI_Kit_{triage_category}_{department}", "ResourceAmount": modify_consumable_resource_demand(baseline_length_of_stay, excel_input_data['PatientProfiles'].iloc[department_row_index+9, department_column_index+1]),
+                    {"ResourceName": f"MCI_Kit_{triage_category}_{department}", "ResourceAmount": excel_input_data['PatientProfiles'].iloc[department_row_index+9, department_column_index+1],
                      "ConsequencesOfUnmetDemand": [{excel_input_data['PatientProfiles'].iloc[department_row_index+9, department_column_index+3]:
                                                     excel_input_data['PatientProfiles'].iloc[department_row_index+9, department_column_index+4]}]},
                     {"ResourceName": f"{department}_Bed", "ResourceAmount": excel_input_data['PatientProfiles'].iloc[department_row_index+10, department_column_index+1],
                      "ConsequencesOfUnmetDemand": [{excel_input_data['PatientProfiles'].iloc[department_row_index+10, department_column_index+3]:
                                                     excel_input_data['PatientProfiles'].iloc[department_row_index+10, department_column_index+4]}]},
-                    {"ResourceName": "Blood", "ResourceAmount": modify_consumable_resource_demand(baseline_length_of_stay, excel_input_data['PatientProfiles'].iloc[department_row_index+11, department_column_index+1]),
+                    # {"ResourceName": "Blood", "ResourceAmount": modify_consumable_resource_demand(baseline_length_of_stay, excel_input_data['PatientProfiles'].iloc[department_row_index+11, department_column_index+1]),
+                    {"ResourceName": "Blood", "ResourceAmount": excel_input_data['PatientProfiles'].iloc[department_row_index+11, department_column_index+1],
                      "ConsequencesOfUnmetDemand": [{excel_input_data['PatientProfiles'].iloc[department_row_index+11, department_column_index+3]:
                                                     excel_input_data['PatientProfiles'].iloc[department_row_index+11, department_column_index+4]}]},
                     {"ResourceName": "Stretcher", "ResourceAmount": excel_input_data['PatientProfiles'].iloc[department_row_index+12, department_column_index+1],
