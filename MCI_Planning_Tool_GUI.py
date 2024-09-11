@@ -35,7 +35,7 @@ RESOURCE_UNITS = {'Nurse': '[Nurse/hour]',
                   'MedicalDrugs': '[1 - available, 0 - not available]',
                   'Blood': '[Blood bag]',
                   'Stretcher': '[Stretcher]',
-                  'MCI_Kit_Walking_EmergencyDepartment': '[Patients Treated]',
+                  'MCI_Kit_Walking_RestOfHospital': '[Patients Treated]',
                   'MCI_Kit_NonWalking_EmergencyDepartment': '[Patients Treated]',
                   'MCI_Kit_NonWalking_OperatingTheater': '[Patients Treated]',
                   'MCI_Kit_NonWalking_HighDependencyUnit': '[Patients Treated]',
@@ -57,7 +57,6 @@ def get_resilience_calculator(system, department, patient_type, resilience_calcu
                         return resilience_calculator
                 else:
                     return resilience_calculator
-
 
 class Ui_MainWindow(object):
 
@@ -108,7 +107,7 @@ class Ui_MainWindow(object):
                                    'MCI_Kit_NonWalking_OperatingTheater': self.label_MCI_kits, 
                                    'MCI_Kit_NonWalking_HighDependencyUnit': self.label_MCI_kits, 
                                    'MCI_Kit_NonWalking_Medical/SurgicalDepartment': self.label_MCI_kits, 
-                                   'MCI_Kit_Walking_EmergencyDepartment': self.label_MCI_kits, 
+                                   'MCI_Kit_Walking_RestOfHospital': self.label_MCI_kits, 
                                    'EmergencyDepartment_Bed': self.label_beds, 
                                    'OperatingTheater_Bed': self.label_beds,
                                    'Medical/SurgicalDepartment_Bed': self.label_beds,
@@ -128,7 +127,7 @@ class Ui_MainWindow(object):
     def change_measures_of_service_labels(self):
         self.label_mortality_rate_before_24h_output.setText(str(round(self.measures_of_service['MortalityRateBefore24H']*100, 2)) + '%')
         self.label_mortality_rate_after_24h_output.setText(str(round(self.measures_of_service['MortalityRateAfter24H']*100, 2)) + '%')
-        self.label_average_length_of_stay_output.setText(str(int(self.measures_of_service['AverageLengthOfStay'])) + 'h')
+        self.label_average_length_of_stay_output.setText(str(round(self.measures_of_service['AverageLengthOfStay'], 2)) + 'h')
         self.label_surgeries_performed_output.setText(str(int(self.measures_of_service['SurgeriesPerformed'])))
         self.label_surgeries_cancelled_output.setText(str(int(self.measures_of_service['SurgeriesCancelled'])))   
 
@@ -145,7 +144,10 @@ class Ui_MainWindow(object):
     
     @staticmethod
     def get_patient_types(system):
-        return ['All'] + list(system.components[0].patient_library.keys())
+        resources_in_stress_scenario = [value['Resource'] for value in system.damage_input.stress_scenario['ComponentsToChange'][0]['ResourcesToChange']]
+        all_patient_types = list(system.components[0].patient_library.keys())
+        patient_types_in_stress_scenario = list(set(resources_in_stress_scenario) & set(all_patient_types))
+        return ['All'] + patient_types_in_stress_scenario
     
     def update_measures_of_service(self):
         department = self.comboBox_department.currentText().replace(" ","")
