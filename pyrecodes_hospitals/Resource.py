@@ -50,7 +50,6 @@ class ConcreteResource(Resource):
 
     def set_relation(self, relation_class_name: str, attribute_name: str) -> None:
         if len(relation_class_name) > 0:
-            # default to Constant?
             try:
                 target_relation = getattr(Relation, relation_class_name)
                 setattr(self, attribute_name, target_relation())
