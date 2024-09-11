@@ -22,9 +22,9 @@ random.seed(1)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
-# ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
+ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
 # ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '\\' # for packaging on WIN
-ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
+# ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
 
 PREDEFINED_SCENARIOS_JSON_FILE=ADDITIONAL_DATA_LOCATION + 'Hospital_Pre-Defined_StressScenarios.json'
 
@@ -165,7 +165,7 @@ class Ui_MainWindow(object):
 
     def format_MCI_kit_resource_name(self):
         department = self.comboBox_department_MCI_Kits.currentText().replace(" ","")
-        GUI_string_to_resource_name = {'Walking|EmergencyDepartment': 'Walking_EmergencyDepartment',
+        GUI_string_to_resource_name = {'Walking|RestOfHospital': 'Walking_RestOfHospital',
                                        'Non-Walking|EmergencyDepartment': 'NonWalking_EmergencyDepartment',
                                        'Non-Walking|OperatingTheater': 'NonWalking_OperatingTheater',
                                        'Non-Walking|HighDependencyUnit': 'NonWalking_HighDependencyUnit',
@@ -705,7 +705,7 @@ class Ui_MainWindow(object):
         self.comboBox_department_Beds.addItems(bed_departments)
         self.comboBox_department_Beds.setCurrentIndex(0)
 
-        MCI_kit_types = ['Walking | Emergency Department', 'Non-Walking | Emergency Department', 'Non-Walking | Operating Theater', 'Non-Walking | High Dependency Unit', 'Non-Walking | Medical/Surgical Department']
+        MCI_kit_types = ['Walking | Rest Of Hospital', 'Non-Walking | Emergency Department', 'Non-Walking | Operating Theater', 'Non-Walking | High Dependency Unit', 'Non-Walking | Medical/Surgical Department']
         self.comboBox_department_MCI_Kits.addItems(MCI_kit_types)
         self.comboBox_department_MCI_Kits.setCurrentIndex(0)
 

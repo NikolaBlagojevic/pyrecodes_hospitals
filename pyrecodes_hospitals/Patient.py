@@ -10,7 +10,7 @@ class PatientType():
     ONE_TIME_CONSUMABLES = ['Stretcher', 'MCI_Kit_NonWalking_EmergencyDepartment', 
                             'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit',
                             'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'MCI_Kit_NonWalking_RestOfHospital',
-                            'MCI_Kit_Walking_EmergencyDepartment', 'Blood']
+                            'MCI_Kit_Walking_RestOfHospital', 'Blood']
 
     def set_parameters(self, patient_type_name, patient_type_parameters: list) -> None:
         self.name = patient_type_name
