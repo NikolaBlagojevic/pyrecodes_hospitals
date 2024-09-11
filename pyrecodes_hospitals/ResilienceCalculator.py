@@ -116,7 +116,6 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
         self.measures_of_service = {}
 
     def update(self, components: list):
-        # TODO: Improve this. Components do not need to be assigned at every time step.
         self.components = components
 
     def calculate_resilience(self):
@@ -130,8 +129,8 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
     
     def calculate_mortality_rate(self, components: list, time_interval: list) -> dict:
         baseline_mortality_rate = self.calculate_baseline_mortality_rate(components)
-        real_mortality_rate = self.calculate_mortality_rate_based_on_dead_patients(components, time_interval)
-        return max(baseline_mortality_rate, real_mortality_rate)
+        mortality_rate_based_on_recorded_data = self.calculate_mortality_rate_based_on_recorded_data(components, time_interval)
+        return max(baseline_mortality_rate, mortality_rate_based_on_recorded_data)
 
     def calculate_mortality_rate_based_on_dead_patients(self, components: list, time_interval: list) -> float:
         all_patients = self.collect_all_patients(components, time_interval)
@@ -150,23 +149,7 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
     def calculate_baseline_mortality_rate(self, components: list, time_interval=[0, math.inf]) -> float:
         all_patients = self.collect_all_patients(components, time_interval)
         if len(all_patients) == 0:
-            # in some cases patients do not have the time to get to a department in the MCI simulation, 
-            # so the baseline mortality rate is not registered 
-            # this should fix it
-            if len(self.scope) == 1 and len(self.resources) == 1 and self.scope != ['All'] and self.resources != ['All']:
-                patient_profile = self.resources[0]
-                department_name = self.scope[0]
-                patient_info = components[0].patient_library[patient_profile]
-                for department in patient_info:
-                    if list(department.keys())[0] == department_name:
-                        mortality_rate_per_time_step = list(department.values())[0]['BaselineMortalityRate']
-                        length_of_stay = list(department.values())[0]['BaselineLengthOfStay']
-                        if mortality_rate_per_time_step > 0:
-                            return self.get_mortality_rate_during_entire_length_of_stay([mortality_rate_per_time_step for _ in range(length_of_stay)])
-                else:
-                    return 0
-            else: 
-                return 0
+            return self.calculate_baseline_mortality_rates_for_empty_departments(components)
         else:
             baseline_mortality_rates = []
             last_mortality_rates_per_time_step = []
@@ -178,6 +161,58 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
                     baseline_mortality_rates.append(self.get_mortality_rate_during_entire_length_of_stay(mortality_rates_per_time_step))
                     last_mortality_rates_per_time_step = mortality_rates_per_time_step
             return np.mean(baseline_mortality_rates)
+        
+    def calculate_mortality_rate_based_on_recorded_data(self, components: list, time_interval: list) -> float:
+        all_patients = self.collect_all_patients(components, time_interval=[0, math.inf])
+        all_mortality_rates = []        
+        last_mortality_rates_per_time_step = []
+        for patient in all_patients:
+            mortality_rate_record = self.get_mortality_rates_record(patient, time_interval)
+            if len(mortality_rate_record) > 0 and mortality_rate_record == last_mortality_rates_per_time_step:
+                all_mortality_rates.append(all_mortality_rates[-1])
+            else:
+                all_mortality_rates.append(self.get_mortality_rate_during_entire_length_of_stay(mortality_rate_record))
+                last_mortality_rates_per_time_step = mortality_rate_record                    
+        return np.mean(all_mortality_rates)
+        
+    def calculate_baseline_mortality_rates_for_empty_departments(self, components: list) -> dict:
+        # in some cases patients do not have the time to get to a department in the MCI simulation, 
+        # so the baseline mortality rate is not registered 
+        # this should fix it
+        if len(self.scope) == 1 and len(self.resources) == 1 and self.scope != ['All'] and self.resources != ['All']:
+            patient_profile = self.resources[0]
+            department_name = self.scope[0]
+            patient_info = components[0].patient_library[patient_profile]
+            for department in patient_info:
+                if list(department.keys())[0] == department_name:
+                    mortality_rate_per_time_step = list(department.values())[0]['BaselineMortalityRate']
+                    length_of_stay = list(department.values())[0]['BaselineLengthOfStay']
+                    if mortality_rate_per_time_step > 0:
+                        return self.get_mortality_rate_during_entire_length_of_stay([mortality_rate_per_time_step for _ in range(length_of_stay)])
+            else:
+                return 0
+        else: 
+            return 0
+        
+    def get_mortality_rates_record(self, patient: Patient.PatientType, time_interval: list) -> list:
+        patient_entry_time_step = patient.flow[0]['TimeStepAtDepartment'][0]
+        output_mortality_rate_record = []
+        
+        if self.scope == ['All']:
+            time_steps_in_department = [time_step for department_info in patient.flow for time_step in department_info['TimeStepAtDepartment'] if department_info['Department'] != patient.EXIT]
+        else:            
+            department_id = patient.departments.index(self.scope[0])
+            time_steps_in_department = patient.flow[department_id]['TimeStepAtDepartment']
+
+        for time_step in time_steps_in_department:
+            modified_time_step = time_step - patient_entry_time_step
+            if time_interval[0] <= modified_time_step < time_interval[1]:
+                try:
+                    output_mortality_rate_record.append(patient.mortality_rate_record[modified_time_step])
+                except IndexError:
+                    print('IndexError: time step out of range')
+
+        return output_mortality_rate_record
         
     def get_mortality_rates_per_time_step_during_entire_length_of_stay(self, patient: Patient.PatientType) -> list:
         if self.scope == ['All']:
@@ -194,14 +229,20 @@ class HospitalMeasureOfServiceCalculator(ResilienceCalculator):
         return mortality_rates_per_time_step
     
     def get_mortality_rate_during_entire_length_of_stay(self, mortality_rates_per_time_step: list) -> float:   
-        # Calculated as probability of a single link failing in a serial system and other links not failing
-        total_prob_of_dying = 0
-        for i, prob_of_dying_at_time_step in enumerate(mortality_rates_per_time_step):
-            mortality_rate_at_other_time_steps = mortality_rates_per_time_step[:i] + mortality_rates_per_time_step[i+1:]
-            nonmortality_rate_at_other_time_steps = np.subtract(1, mortality_rate_at_other_time_steps)
-            prob_of_not_dying_at_other_time_steps = np.prod(nonmortality_rate_at_other_time_steps)
-            total_prob_of_dying += prob_of_dying_at_time_step * prob_of_not_dying_at_other_time_steps
-        return total_prob_of_dying
+        CALCULATION_METHOD = 'serial_system_failing' # 'only_single_link_failing', 'serial_system_failing'
+        if CALCULATION_METHOD == 'only_single_link_failing':
+            # Calculated as probability of a single link failing in a serial system and other links not failing
+            total_prob_of_dying = 0
+            for i, prob_of_dying_at_time_step in enumerate(mortality_rates_per_time_step):
+                mortality_rate_at_other_time_steps = mortality_rates_per_time_step[:i] + mortality_rates_per_time_step[i+1:]
+                nonmortality_rate_at_other_time_steps = np.subtract(1, mortality_rate_at_other_time_steps)
+                prob_of_not_dying_at_other_time_steps = np.prod(nonmortality_rate_at_other_time_steps)
+                total_prob_of_dying += prob_of_dying_at_time_step * prob_of_not_dying_at_other_time_steps
+            return total_prob_of_dying
+        elif CALCULATION_METHOD == 'serial_system_failing':
+            # Calculated as probability of a serial system failing - a single links failing leads to the system failing, but more than one link failing is possible too
+            total_prob_of_dying = 1 - np.prod([1-mortality_rate for mortality_rate in mortality_rates_per_time_step])
+            return total_prob_of_dying
     
     def patient_type_considered(self, patient: Patient.PatientType) -> bool:
         if self.resources == ['All']:
