@@ -21,7 +21,7 @@ MODIFIED_RESOURCE_NAME = {'Nurse': 'Nurses',
                           'MedicalDrugs': 'Medical drugs',
                           'Blood': 'Blood',
                           'Stretcher': 'Stretchers',
-                          'MCI_Kit_Walking_EmergencyDepartment': 'MCI kits to treat walking patients in the Emergency Department',
+                          'MCI_Kit_Walking_RestOfHospital': 'MCI kits to treat walking patients in the Emergency Department',
                           'MCI_Kit_NonWalking_EmergencyDepartment': 'MCI kits to treat non-walking patients in the Emergency Department',
                           'MCI_Kit_NonWalking_OperatingTheater': 'MCI kits to treat patients in the Operating Theater',
                           'MCI_Kit_NonWalking_HighDependencyUnit': 'MCI kits to treat patients in the High Dependency Unit',
@@ -33,7 +33,7 @@ MODIFIED_RESOURCE_NAME = {'Nurse': 'Nurses',
                           'RestOfHospital_Bed': 'equipped and staffed beds in rest of the hospital'
                           }
 
-CONSUMABLE_RESOURCES = ['MCI_Kit_Walking_EmergencyDepartment', 'MCI_Kit_NonWalking_EmergencyDepartment',
+CONSUMABLE_RESOURCES = ['MCI_Kit_Walking_RestOfHospital', 'MCI_Kit_NonWalking_EmergencyDepartment',
                         'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit',
                         'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'Blood']
 
@@ -45,7 +45,7 @@ def generate_report(system, input_file_location: str):
     doc.add_heading('MCI Planning Tool', level=1)
 
     # Add description of the MCI Planning Tool
-    doc.add_paragraph('This report is generated using the MCI Planning Tool. MCI Planning Tool simulates the flow of patients through hospital departments during a mass casualty incident (MCI). It estimates the demand for resources at a department, compares it with the available supply and estimates the impact on patients in cases where supply is not sufficient to meet the demand. Only 8 resource types are considered in this version of the tool: Fuel, Water, Nurses, Oxygen, Beds, Stretchers, Blood and Medical Drugs/Kits. More comprehensive hospital performance assessment is possible using the Rapid and Detailed Resilience Assessment Tools. The MCI Planning Tool is built on several conservative assumptions regarding the hospital performance in an MCI, not considering substandard procedures. The outputs of the tool should thus be used as a conservative and approximate estimate of the hospital performance and need to be assessed by experienced hospital staff and decision makers prior to implementing interventions in the hospital based on the tool outputs.')
+    doc.add_paragraph('This report is generated using the MCI Planning Tool. MCI Planning Tool simulates the flow of patients through hospital departments during a mass casualty incident (MCI). It estimates the demand for resources at a department, compares it with the available supply and estimates the impact on patients in cases where supply is not sufficient to meet the demand. 7 resource categories are considered in this version of the tool: Fuel, Water, Nurses, Oxygen, Beds and Stretchers, Blood and Medical Drugs/Kits. More comprehensive hospital performance assessment is possible using the Rapid and Detailed Resilience Assessment Tools. The MCI Planning Tool is built on several conservative assumptions regarding the hospital performance in an MCI, not considering substandard procedures. The outputs of the tool should thus be used as a conservative and approximate estimate of the hospital performance and need to be assessed by experienced hospital staff and decision makers prior to implementing interventions in the hospital based on the tool outputs.')
 
     doc.add_heading('Results of MCI resilience assessment', level=1)
 
@@ -277,9 +277,9 @@ def generate_patient_arrival_dynamic_plots(system, doc, plot_folder='./plots/'):
             plt.savefig(f'{plot_folder}PatientArrival_{patient_type.replace(" ", "_")}.png')
             doc.add_picture(f'{plot_folder}PatientArrival_{patient_type.replace(" ", "_")}.png', width=docx.shared.Cm(12))
             plt.close()
-        elif time_steps == [0]:
-            existing_patients_considered = True
-            existing_patients_string += f' {patient_arrival[0]} {patient_type}s, '
+        # elif time_steps == [0]:
+        #     existing_patients_considered = True
+        #     existing_patients_string += f' {patient_arrival[0]} {patient_type}s, '
 
     if existing_patients_considered:        
         doc.add_paragraph(existing_patients_string[:-2] + '.')
