@@ -1,0 +1,6 @@
+[
+    [["Patient Type"], ["PatientTypes"]],
+    [["Time Step Unit", "Value"], ["TimeStepUnit"]],
+    [["Time Step"], ["TimeStepping"]],
+    [["Number of patients addmited"], ["PatientTypes"]]
+]
