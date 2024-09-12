@@ -54,7 +54,7 @@ Data needed to run the MCI Planning Tool is structured in an Excel file and divi
 
 An example of the Excel input file can be found in the repository: MCI_Tool_Input_Example.xlsx
 
-### How MCI Planning Tool works
+### How the MCI Planning Tool works
 
 Once the inputs are set and the simulation begins, the MCI Planning Tool simulates the MCI one hour at a time. During each hour, new patients are admitted, and those already in the hospital who have completed their stay in a department move to the next one. The tool then compares the patients' demand for resources within each department to the available supply. If there is an unmet demand, the status of patients who did not receive the needed resources is updated according to the consequences outlined in the input file, in their patient profile. These consequences may include death, an increase in mortality rate, extended length of stay, or surgery cancellation. The duration of the MCI simulation is determined by the user. After the simulation ends, the hospital’s measures of service are calculated based on all patients who visited the hospital during the simulated MCI. Measures of service include mortality rates before and after 24 hours of patient admission, average length of stay, surgeries performed, and surgeries canceled. The service metrics can be viewed by department and by patient profile.
 
@@ -125,7 +125,3 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” 
 ## Contact Information
 
 For questions, feedback, or support, please reach out to Nikola Blagojevic at blagojevic@ibk.baug.ethz.ch or nikolablagojevicnis@gmail.com.
-
-## Acknowledgments
-
-TODO: Thank ETH4D. Other people from ETH, ICRC Beirut and ICRC HQ.
