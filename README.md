@@ -2,9 +2,11 @@
 
 ## Overview
 
-The Mass Casualty Incident (MCI) Planning Tool supports hospital staff in preparing for an MCI event by assessing hospital performance and the quantity of resources needed to serve the sudden increase in the number of admitted patients. 
+The Mass Casualty Incident (MCI) Planning Tool helps hospital staff prepare for an MCI by simulating the hospital’s response and enabling "what-if" analysis to identify effective strategies for improving the hospital’s preparedness and response capabilities.
 
-This repository contains the source code of the MCI Planning Tool. The MCI Planning Tool is based on the [pyrecodes software](https://nikolablagojevic.github.io/pyrecodes/html/usage/what_is_pyrecodes.html) for recovery modelling and resilience assessment of the built environment. 
+The MCI Planning Tool simulates resource supply and demand in a hospital during an MCI and evaluates how unmet resource demand impacts patient outcomes, including mortality rates, length of stay, and the number of surgeries performed. Given the complexity of hospital operations, which rely on a wide range of human and material resources, it’s impractical to account for all possible resources. Therefore, the tool focuses on seven critical resource groups essential for hospital performance: Nurses, Electric Power, Water, Oxygen, Medical Drugs (including MCI kits), Blood and Beds (including Stretchers).
+
+This repository contains the source code of the MCI Planning Tool. The MCI Planning Tool is based on the [pyrecodes software](https://nikolablagojevic.github.io/pyrecodes/html/usage/what_is_pyrecodes.html).
 
 Please note that the tool is in its pilot phase and is yet to be tested and improved based on the real-world application experience.
 
@@ -13,8 +15,6 @@ Please note that the tool is in its pilot phase and is yet to be tested and impr
 <!-- ![MCI GUI](/readme_figures/MCI_Tool_GUI.png) -->
 
 ### Use Examples
-
-The MCI Planning Tool simulates resource supply and demand in a hospital during an MCI and evaluates how unmet resource needs impact patient outcomes, including mortality rates, length of stay, and the number of surgeries performed. Given the complexity of hospital operations, which rely on a wide range of human and material resources, it’s impractical to account for all possible resources. Therefore, the tool focuses on nine critical resources essential for hospital performance: Nurses, Fuel, Water, Oxygen, Medical Drugs (including MCI kits), Medical Equipment, Stretchers, Beds, and Blood.
 
 The use cases for the MCI Planning Tool include:
 1. Estimating hospital performance in an MCI scenario. 
@@ -43,7 +43,7 @@ The MCI Planning Tool is to be used:
 3. When planning an intervention in the hospital.
 
 ### Users
-Primary users of the tool include the hospital staff responsible for organizing and planning the response to an MCI. Both the health and engineering staff should be included.
+Users of the tool include the hospital staff responsible for organizing and planning the response to an MCI. Both the health and engineering staff should be included.
 
 ### Inputs
 
@@ -56,7 +56,7 @@ An example of the Excel input file can be found in the repository: MCI_Tool_Inpu
 
 ### How MCI Planning Tool works
 
-Once the inputs are set and the simulation begins, the MCI Planning Tool simulates the MCI one hour at a time. During each hour, new patients are admitted, and those already in the hospital who have completed their stay in a department move to the next one. The tool then compares the patients' demand for resources within each department to the available supply. If there is an unmet demand, the status of patients who did not receive the needed resources is updated according to the consequences outlined in the input file, in their patient profile. These consequences may include death, an increase in mortality rate, extended length of stay, or surgery cancellation. The duration of the MCI simulation is determined by the user. After the simulation ends, the hospital’s measures of service are calculated based on all patients who visited the hospital during the simulated MCI. Measures of service include mortality rates before and after 24 hours, average length of stay, surgeries performed, and surgeries canceled. The service metrics can be viewed by department and by patient profile.
+Once the inputs are set and the simulation begins, the MCI Planning Tool simulates the MCI one hour at a time. During each hour, new patients are admitted, and those already in the hospital who have completed their stay in a department move to the next one. The tool then compares the patients' demand for resources within each department to the available supply. If there is an unmet demand, the status of patients who did not receive the needed resources is updated according to the consequences outlined in the input file, in their patient profile. These consequences may include death, an increase in mortality rate, extended length of stay, or surgery cancellation. The duration of the MCI simulation is determined by the user. After the simulation ends, the hospital’s measures of service are calculated based on all patients who visited the hospital during the simulated MCI. Measures of service include mortality rates before and after 24 hours of patient admission, average length of stay, surgeries performed, and surgeries canceled. The service metrics can be viewed by department and by patient profile.
 
 **Figure 2:** MCI Planning Tool algorithm.
 
