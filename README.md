@@ -4,7 +4,7 @@
 
 The Mass Casualty Incident (MCI) Planning Tool helps hospital staff prepare for an MCI by simulating the hospital’s response and enabling "what-if" analysis to identify effective strategies for improving the hospital’s preparedness and response capabilities.
 
-The MCI Planning Tool simulates resource supply and demand in a hospital during an MCI and evaluates how unmet resource demand impacts patient outcomes, including mortality rates, length of stay, and the number of surgeries performed. Given the complexity of hospital operations, which rely on a wide range of human and material resources, it’s impractical to account for all possible resources. Therefore, the tool focuses on seven critical resource groups essential for hospital performance: Nurses, Electric Power, Water, Oxygen, Medical Drugs (including MCI kits), Blood and Beds (including Stretchers).
+The MCI Planning Tool simulates resource supply and demand in a hospital during an MCI and evaluates how unmet resource demand impacts patient outcomes, including mortality rates, length of stay, and the number of surgeries performed. Given the complexity of hospital operations, which rely on a wide range of human and material resources, it’s impractical to account for all resources. Therefore, the tool focuses on seven critical resource groups essential for hospital performance: Nurses, Electric Power, Water, Oxygen, Medical Drugs (including MCI kits), Blood and Beds (including Stretchers).
 
 This repository contains the source code of the MCI Planning Tool. The MCI Planning Tool is based on the [pyrecodes software](https://nikolablagojevic.github.io/pyrecodes/html/usage/what_is_pyrecodes.html).
 
