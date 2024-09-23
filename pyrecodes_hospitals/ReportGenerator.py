@@ -78,6 +78,11 @@ def generate_report(system, input_file_location: str):
     # Save the document
     doc.save('MCIResilienceAssessmentReport.docx')
 
+    if os.path.exists('MCIResilienceAssessmentReport.docx'):
+        return os.path.abspath('MCIResilienceAssessmentReport.docx')
+    else:
+        return None
+
 def add_resource_supply_description(input_file_location, doc):
 
     doc.add_heading('Hospital Resource Supply', level=2)

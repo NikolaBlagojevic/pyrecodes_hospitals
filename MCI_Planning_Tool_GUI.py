@@ -8,7 +8,7 @@
 import sys
 import os
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QFileDialog, QMainWindow
+from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from pyrecodes_hospitals import main
 from pyrecodes_hospitals import ResilienceCalculator
 from pyrecodes_hospitals import Plotter
@@ -22,9 +22,9 @@ random.seed(1)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
-# ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
+ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
 # ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '\\' # for packaging on WIN
-ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
+# ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
 
 PREDEFINED_SCENARIOS_JSON_FILE=ADDITIONAL_DATA_LOCATION + 'Hospital_Pre-Defined_StressScenarios.json'
 
@@ -181,6 +181,23 @@ class Ui_MainWindow(object):
         self.comboBox_preDefinedMCIType.setEnabled(not checked)
         self.textEdit_NumberOfPatients.setEnabled(not checked)
         self.textEdit_InvestigatedPeriod.setEnabled(not checked)
+
+    def generate_report(self):
+        file_name = ReportGenerator.generate_report(self.system, self.input_file_location)
+        if file_name is not None:
+            self.show_pop_up_message("Report generated successfully", f"Report saved as {file_name}")
+        else:
+            self.show_pop_up_message("Error", "Report generation failed. Please try again.")
+    
+    def show_pop_up_message(self, title, message):
+        msg = QMessageBox(self.centralwidget)
+        if title == "Error":
+            msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        response = msg.exec()
+        if response == QMessageBox.StandardButton.Ok:
+            print("OK clicked")
 
     def setupUi(self, MainWindow, app=None):
         MainWindow.setObjectName("MainWindow")
@@ -724,7 +741,7 @@ class Ui_MainWindow(object):
         self.button_show_plot_stretchers.clicked.connect(lambda: self.show_plot('Stretcher'))  
         self.button_show_plot_MCI_kits.clicked.connect(lambda: self.show_plot(self.format_MCI_kit_resource_name()))
         self.button_show_plot_beds.clicked.connect(lambda: self.show_plot(self.format_bed_resource_name()))
-        self.button_generate_report.clicked.connect(lambda: ReportGenerator.generate_report(self.system, self.input_file_location))
+        self.button_generate_report.clicked.connect(lambda: self.generate_report())
 
         # Disable pre-defined MCI inputs if user-defined MCI is selected
         self.radioButton_userDefinedMCI.toggled.connect(self.disableMCIScenarioInputForCustomScenario)
