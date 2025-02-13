@@ -134,7 +134,7 @@ This work was supported by the ETH for Development (ETH4D) and EPFL Essential Te
 
 ## Acknowledgments
 
-Special thanks are due to our ETH colleagues, Dr. Giulia Celentano and Dr. Rossella Marmo, for their invaluable collaboration and key contributions that shaped the MCI Planning Tool throughout the project. We would also like to thank Prof. Dr. Brian Adey and Prof. Dr. Guillaume Habert for their advice and useful comments throughout the project.
+Special thanks are due to our ETH colleagues, Dr. Giulia Celentano and Dr. Rossella Marmo, for their invaluable collaboration and key contributions that shaped the MCI Planning Tool. We would also like to thank Prof. Dr. Brian Adey and Prof. Dr. Guillaume Habert for their advice and useful comments throughout the project.
 
 This project was conducted in partnership with the International Committee of the Red Cross (ICRC). We are grateful to Pavlos Tamvakis for his leadership of the “Building Resilience in Health Infrastructure” project. Our sincere thanks go to Claudia Truppa for her numerous insights and constant support, and to Roger Alcock for sharing his experience and expertise, which were integral to the development of the MCI Planning Tool. We also wish to acknowledge Jessica Yohana Ramirez Mendoza and Prof. Dr. Yiannis Xenidis for their contributions.
 
