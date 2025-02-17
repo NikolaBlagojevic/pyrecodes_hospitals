@@ -16,7 +16,7 @@ Please note that the tool is in the pilot phase.
 
 ### Use Examples
 
-The use cases for the MCI Planning Tool include:
+The use cases for the MCI Planning Tool include (click the image for a video tutorial):
 1. Estimating hospital performance in an MCI scenario. 
 
 <a href="https://youtu.be/KUB-KcLb9FU">
@@ -139,6 +139,8 @@ Special thanks are due to our ETH colleagues, Dr. Giulia Celentano and Dr. Rosse
 This project was conducted in partnership with the International Committee of the Red Cross (ICRC). We are grateful to Pavlos Tamvakis for his leadership of the “Building Resilience in Health Infrastructure” project. Our sincere thanks go to Claudia Truppa for her numerous insights and constant support, and to Roger Alcock for sharing his experience and expertise, which were integral to the development of the MCI Planning Tool. We also wish to acknowledge Jessica Yohana Ramirez Mendoza and Prof. Dr. Yiannis Xenidis for their contributions.
 
 Collaboration with the ICRC delegation in Beirut, Lebanon, was essential to this project. We are deeply appreciative of the feedback and experience shared by the delegation staff, which greatly aided the development of the tool. In particular, we thank Antoine Hess, Christine Bartulec, Moustafa Khalife, Marta Rivas Blanco, Jose Ignacio Blasco Millan and Moustafa Ramadan. Their dedication and positive attitude despite many challenges was inspiring.
+
+Lastly, we would like to express our gratitude to the staff at Rafik Hariri University Hospital in Beirut for their cooperation, which was instrumental in making the MCI Planning Tool practical and effective for assessing and improving hospital performance during MCIs.
 
 Authors: Nikola Blagojević and Božidar Stojadinović
 
