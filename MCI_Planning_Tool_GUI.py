@@ -22,9 +22,9 @@ random.seed(1)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
-ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
+# ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '/' # for packaging on MAC
 # ADDITIONAL_DATA_LOCATION = os.path.abspath(os.path.dirname(__file__)) + '\\' # for packaging on WIN
-# ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
+ADDITIONAL_DATA_LOCATION = './additional_data/' # for running from source
 
 PREDEFINED_SCENARIOS_JSON_FILE=ADDITIONAL_DATA_LOCATION + 'Hospital_Pre-Defined_StressScenarios.json'
 
