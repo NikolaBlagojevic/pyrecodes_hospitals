@@ -1,3 +1,4 @@
 env_hospital_app_packaging/
 .vscode/
 pytest_cache/
+__pycache__/
