@@ -37,7 +37,7 @@ CONSUMABLE_RESOURCES = ['MCI_Kit_Walking_RestOfHospital', 'MCI_Kit_NonWalking_Em
                         'MCI_Kit_NonWalking_OperatingTheater', 'MCI_Kit_NonWalking_HighDependencyUnit',
                         'MCI_Kit_NonWalking_Medical/SurgicalDepartment', 'Blood']
 
-def generate_report(system, input_file_location: str):
+def generate_report(system, input_file_location: str, include_liability_waiver: bool = False):
     doc = docx.Document()
 
     # Add a title
@@ -57,7 +57,8 @@ def generate_report(system, input_file_location: str):
 
     add_supply_demand_plots_to_report(system, doc)
 
-    add_liability_waiver(doc)
+    if include_liability_waiver:
+        add_liability_waiver(doc)
 
     doc.add_heading('Annex: Inputs', level=1)
 
